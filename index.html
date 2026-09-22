@@ -1027,8 +1027,8 @@ function showTab(t){
 }
 document.querySelector("nav.tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]"); if(b) showTab(b.dataset.tab);});
 
-/* ---------- boot: example quote showing the CSN problem ---------- */
-basket=["AY-H6255","RT-C1S-26A-3000","AC-825IP-U"];
+/* ---------- boot: start empty (use "Load example" to see a demo) ---------- */
+basket=[];
 render(); drawCatalog(); drawSizing();
 showTab((location.hash||"").slice(1));
 </script>
