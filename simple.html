@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rosslare Match Check</title>
+<meta name="description" content="Check whether a Rosslare reader and card work together, in plain language.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#F4F6F8; --bg2:#EAF1F1; --card:#FFFFFF; --ink:#12181C; --ink2:#4A565E; --faint:#8A969D; --line:#E1E6EA;
+  --accent:#0E6E6E; --accent-2:#13A39A; --accent-soft:#E2F2F0; --on-accent:#FFFFFF;
+  --yes:#12824B; --yes-soft:#E4F5EC; --warn:#A35F00; --warn-soft:#FDF1DD; --csn:#C2410C; --csn-soft:#FDEBE1; --no:#C0262D; --no-soft:#FCE6E6; --info:#2E5AAC; --info-soft:#E6EDFA;
+  --shadow:0 1px 2px rgba(18,24,28,.05),0 12px 32px -8px rgba(18,24,28,.12);
+  --shadow-lg:0 2px 4px rgba(18,24,28,.05),0 24px 60px -12px rgba(14,110,110,.25);
+  --font:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --r:18px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#0C1114; --bg2:#0F1B1C; --card:#141C20; --ink:#E8EEF0; --ink2:#A9B6BC; --faint:#6E7C83; --line:#243037;
+  --accent:#3CC7BC; --accent-2:#3CC7BC; --accent-soft:#12302F; --on-accent:#05201E;
+  --yes:#4ED28C; --yes-soft:#102A1D; --warn:#F2B650; --warn-soft:#2E2412; --csn:#FF935A; --csn-soft:#33200F; --no:#FF7A7A; --no-soft:#351416; --info:#8DB1F5; --info-soft:#162238;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px -8px rgba(0,0,0,.5);
+  --shadow-lg:0 2px 4px rgba(0,0,0,.3),0 24px 60px -12px rgba(0,0,0,.6);
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0C1114; --bg2:#0F1B1C; --card:#141C20; --ink:#E8EEF0; --ink2:#A9B6BC; --faint:#6E7C83; --line:#243037;
+  --accent:#3CC7BC; --accent-2:#3CC7BC; --accent-soft:#12302F; --on-accent:#05201E;
+  --yes:#4ED28C; --yes-soft:#102A1D; --warn:#F2B650; --warn-soft:#2E2412; --csn:#FF935A; --csn-soft:#33200F; --no:#FF7A7A; --no-soft:#351416; --info:#8DB1F5; --info-soft:#162238;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px -8px rgba(0,0,0,.5);
+  --shadow-lg:0 2px 4px rgba(0,0,0,.3),0 24px 60px -12px rgba(0,0,0,.6);
+}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 500px at 50% -120px,var(--bg2),transparent 70%),var(--bg);color:var(--ink);font:16px/1.55 var(--font);padding-inline:16px;padding-block:0 64px;min-height:100vh}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent-2);outline-offset:2px}
+.wrap{max-width:1040px;margin:0 auto}
+.mono{font-family:var(--mono);font-size:.9em;letter-spacing:-.01em}
+
+/* top bar */
+.bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-block:18px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.01em}
+.logo i{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;color:var(--on-accent);font-style:normal;font-size:15px}
+.links{display:flex;gap:4px;flex-wrap:wrap}
+.links a,.links button{border:0;background:none;color:var(--ink2);text-decoration:none;font-size:14px;font-weight:600;padding:8px 12px;border-radius:999px;cursor:pointer}
+.links a:hover,.links button:hover{background:var(--card);color:var(--ink)}
+
+/* hero */
+.hero{text-align:center;padding-block:36px 26px}
+.hero h1{font-size:clamp(32px,5.4vw,54px);line-height:1.05;letter-spacing:-.035em;font-weight:800;margin:0;text-wrap:balance}
+.hero h1 span{background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--ink2);font-size:18px;max-width:560px;margin:14px auto 0;text-wrap:balance}
+
+/* builder */
+.builder{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch}
+.plus{align-self:center;width:44px;height:44px;border-radius:50%;background:var(--card);box-shadow:var(--shadow);display:grid;place-items:center;font-size:22px;font-weight:700;color:var(--faint)}
+@media (max-width:760px){.builder{grid-template-columns:1fr}.plus{justify-self:center;margin:-6px 0}}
+.slot{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;border:1px solid var(--line);display:flex;flex-direction:column;gap:12px;position:relative}
+.slot.filled{border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
+.slot-h{display:flex;align-items:center;gap:10px}
+.step{width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}
+.slot-h h2{font-size:17px;margin:0;font-weight:700;letter-spacing:-.01em}
+.slot-h small{color:var(--faint);font-size:13px;margin-left:auto}
+.field{position:relative}
+.field input{width:100%;border:1.5px solid var(--line);background:var(--bg);border-radius:12px;padding:13px 14px 13px 42px;font-size:16px;transition:border-color .15s,box-shadow .15s}
+.field input:focus{outline:none;border-color:var(--accent-2);box-shadow:0 0 0 4px var(--accent-soft);background:var(--card)}
+.field svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--faint)}
+.menu{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-lg);z-index:30;max-height:330px;overflow:auto;padding:6px}
+.menu button{display:flex;flex-direction:column;align-items:flex-start;width:100%;border:0;background:none;text-align:left;padding:9px 12px;border-radius:10px;cursor:pointer}
+.menu button:hover,.menu button.on{background:var(--accent-soft)}
+.menu .pn{font-family:var(--mono);font-weight:600;font-size:14px}
+.menu .d{font-size:13px;color:var(--ink2)}
+.menu .old{font-size:11px;font-weight:700;color:var(--warn);margin-left:6px}
+.menu .none{padding:12px;color:var(--faint);font-size:14px}
+.picked{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;align-items:center;gap:12px;padding:10px 10px 10px 12px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}
+.item .ico{width:34px;height:34px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.item .t{min-width:0;flex:1}
+.item .t b{display:block;font-family:var(--mono);font-size:14px}
+.item .t span{display:block;font-size:13px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .x{border:0;background:none;width:30px;height:30px;border-radius:8px;cursor:pointer;color:var(--faint);font-size:18px;line-height:1}
+.item .x:hover{background:var(--no-soft);color:var(--no)}
+.quick{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.quick span{font-size:12px;color:var(--faint);margin-right:2px}
+.quick button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 10px;font-size:12.5px;font-family:var(--mono);cursor:pointer;color:var(--ink2)}
+.quick button:hover{border-color:var(--accent-2);color:var(--accent)}
+
+.extras{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;margin-top:18px}
+.switch{display:inline-flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 14px 8px 8px;cursor:pointer;font-size:14px;font-weight:600;box-shadow:var(--shadow)}
+.switch input{appearance:none;width:38px;height:22px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;margin:0;transition:background .2s}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.switch input:checked{background:var(--accent)}
+.switch input:checked::after{transform:translateX(16px)}
+.tip{position:relative;display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--bg);color:var(--faint);font-size:11px;font-weight:800;cursor:help;border:1px solid var(--line)}
+.tip:hover::after,.tip:focus::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);width:260px;background:var(--ink);color:var(--bg);padding:10px 12px;border-radius:10px;font-size:12.5px;font-weight:500;line-height:1.45;z-index:40;text-align:left}
+.ghost{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:var(--shadow);color:var(--ink2)}
+.ghost:hover{color:var(--ink);border-color:var(--accent-2)}
+
+/* answer */
+.answer{margin-top:28px}
+.empty{text-align:center;padding:40px 20px;border:2px dashed var(--line);border-radius:var(--r);color:var(--ink2)}
+.empty .steps{display:flex;justify-content:center;gap:28px;flex-wrap:wrap;margin-top:14px;font-size:14px}
+.empty .steps div{display:flex;align-items:center;gap:8px}
+.verdict{border-radius:24px;padding:28px;display:grid;grid-template-columns:auto 1fr;gap:6px 20px;align-items:center;box-shadow:var(--shadow-lg);background:var(--card);border:1px solid var(--line);position:relative;overflow:hidden}
+.verdict::before{content:"";position:absolute;inset:0;background:linear-gradient(120deg,var(--tone-soft),transparent 60%);pointer-events:none}
+.verdict > *{position:relative}
+.badge{grid-row:span 2;width:64px;height:64px;border-radius:20px;background:var(--tone);color:var(--card);display:grid;place-items:center}
+.verdict h2{margin:0;font-size:clamp(22px,3.2vw,30px);letter-spacing:-.02em;line-height:1.15}
+.verdict p{margin:0;color:var(--ink2);font-size:16px;max-width:62ch}
+.t-yes{--tone:var(--yes);--tone-soft:var(--yes-soft)} .t-warn{--tone:var(--warn);--tone-soft:var(--warn-soft)}
+.t-csn{--tone:var(--csn);--tone-soft:var(--csn-soft)} .t-no{--tone:var(--no);--tone-soft:var(--no-soft)} .t-info{--tone:var(--info);--tone-soft:var(--info-soft)}
+@media (max-width:560px){.verdict{grid-template-columns:1fr}.badge{grid-row:auto}}
+
+.results{display:grid;gap:12px;margin-top:16px}
+.res{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;display:grid;gap:10px;box-shadow:var(--shadow)}
+.res-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.res-top .pair{font-family:var(--mono);font-weight:600;font-size:14px}
+.res-top .pair em{font-style:normal;color:var(--faint);margin:0 4px}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:12.5px;font-weight:700;background:var(--tone-soft);color:var(--tone);margin-left:auto}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.res p{margin:0;color:var(--ink2);font-size:15px}
+.gets{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px;background:var(--bg);border-radius:12px;padding:10px 12px}
+.gets b{font-weight:700}
+.gets .ex{font-family:var(--mono);font-size:13px;color:var(--faint)}
+.gets.bad b{color:var(--csn)}
+.swaps{display:grid;gap:8px}
+.swaps h4{margin:4px 0 0;font-size:13px;color:var(--ink2);font-weight:700}
+.swaprow{display:flex;flex-wrap:wrap;gap:8px}
+.swap{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 12px;cursor:pointer;text-align:left}
+.swap:hover{border-color:var(--accent-2);box-shadow:0 0 0 3px var(--accent-soft)}
+.swap .pn{font-family:var(--mono);font-weight:600;font-size:13px}
+.swap .d{font-size:12px;color:var(--ink2)}
+.swap .arr{color:var(--accent);font-weight:800}
+.notes{margin-top:22px}
+.notes h3{font-size:15px;margin:0 0 10px;color:var(--ink2)}
+.note{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:14px;background:var(--card);border:1px solid var(--line);margin-bottom:8px;font-size:14px}
+.note i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--tone);margin-top:7px}
+.note b{font-family:var(--mono);font-size:13px}
+.note .swaprow{margin-top:8px}
+.actions{display:flex;justify-content:center;gap:10px;margin-top:22px;flex-wrap:wrap}
+
+/* sheet (paste) */
+.scrim{position:fixed;inset:0;background:rgba(8,12,14,.5);backdrop-filter:blur(4px);display:grid;place-items:center;z-index:50;padding:16px}
+.sheet{background:var(--card);border-radius:22px;padding:24px;width:min(560px,100%);box-shadow:var(--shadow-lg)}
+.sheet h2{margin:0 0 6px;font-size:22px;letter-spacing:-.02em}
+.sheet p{margin:0 0 12px;color:var(--ink2);font-size:14px}
+.sheet textarea{width:100%;min-height:160px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);padding:12px;font-family:var(--mono);font-size:13px;resize:vertical}
+.sheet textarea:focus{outline:none;border-color:var(--accent-2)}
+.row{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:11px 18px;font-weight:700;cursor:pointer;background:var(--accent);color:var(--on-accent)}
+.btn:hover{filter:brightness(1.08)}
+.btn.sec{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+.found{font-size:13px;color:var(--ink2);margin-top:10px}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;z-index:60;box-shadow:var(--shadow-lg)}
+footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--faint)}
+footer a{color:var(--ink2)}
+@media (prefers-reduced-motion:no-preference){
+  .verdict,.res{animation:rise .35s ease both}
+  @keyframes rise{from{transform:translateY(6px);opacity:.001}to{transform:none;opacity:1}}
+}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <div class="bar">
+    <div class="logo"><i>✓</i> Rosslare Match Check</div>
+    <nav class="links">
+      <button id="open-paste" type="button">Paste a quote</button>
+      <a href="index.html#catalog">Product catalog</a>
+      <a href="index.html#sizing">AC-825 sizing</a>
+      <a href="index.html">Detailed view</a>
+    </nav>
+  </div>
+
+  <header class="hero">
+    <h1>Will these <span>work together?</span></h1>
+    <p>Pick a reader and a card. We'll tell you if they match and what the access system will actually see.</p>
+  </header>
+
+  <section class="builder" aria-label="Choose products">
+    <div class="slot" id="slot-reader">
+      <div class="slot-h"><span class="step">1</span><h2>Reader</h2><small>on the door</small></div>
+      <div class="field">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="in-reader" type="text" autocomplete="off" spellcheck="false" placeholder="Search e.g. AY-H6255 or 6270" aria-label="Search readers">
+        <div class="menu" id="menu-reader" hidden></div>
+      </div>
+      <div class="picked" id="picked-reader"></div>
+      <div class="quick" id="quick-reader"></div>
+    </div>
+    <div class="plus" aria-hidden="true">+</div>
+    <div class="slot" id="slot-cred">
+      <div class="slot-h"><span class="step">2</span><h2>Card or fob</h2><small>what people carry</small></div>
+      <div class="field">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="in-cred" type="text" autocomplete="off" spellcheck="false" placeholder="Search e.g. RT-C1S, ISO card, prox" aria-label="Search cards and fobs">
+        <div class="menu" id="menu-cred" hidden></div>
+      </div>
+      <div class="picked" id="picked-cred"></div>
+      <div class="quick" id="quick-cred"></div>
+    </div>
+  </section>
+
+  <div class="extras">
+    <label class="switch" for="needfc"><input type="checkbox" id="needfc" checked> Card numbers must match what's printed
+      <span class="tip" tabindex="0" data-tip="Most customers need this. When it's on, we flag setups where the system would only see the card's hidden serial number (CSN) instead of the facility code and card number.">?</span></label>
+    <button class="ghost" id="add-panel" type="button">+ Add a panel (optional)</button>
+  </div>
+
+  <section class="slot" id="slot-ctrl" style="margin-top:14px" hidden>
+    <div class="slot-h"><span class="step">3</span><h2>Panel</h2><small>optional</small></div>
+    <div class="field">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="in-ctrl" type="text" autocomplete="off" spellcheck="false" placeholder="Search e.g. AC-825IP or MD-D02B" aria-label="Search panels">
+      <div class="menu" id="menu-ctrl" hidden></div>
+    </div>
+    <div class="picked" id="picked-ctrl"></div>
+    <div class="quick" id="quick-ctrl"></div>
+  </section>
+
+  <section class="answer" id="answer" aria-live="polite"></section>
+
+  <footer>
+    <span>Based on the Rosslare product guide plus Rosslare datasheets. Anything marked "check with tech support" isn't confirmed.</span>
+    <span><a href="index.html">Detailed view</a> · <a href="site-style.html">Site-style view</a></span>
+  </footer>
+</div>
+
+<div class="scrim" id="scrim" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="paste-title">
+    <h2 id="paste-title">Paste a quote</h2>
+    <p>Paste an email, quote or parts list. We'll pick out the Rosslare part numbers.</p>
+    <textarea id="paste" spellcheck="false" placeholder="10  AY-H6255&#10;250 RT-C1S-26A-3000&#10;1   AC-825IP-U"></textarea>
+    <div class="found" id="found"></div>
+    <div class="row"><button class="btn sec" id="paste-cancel" type="button">Close</button><button class="btn" id="paste-go" type="button">Find parts</button></div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+
+/* ============================================================
+   DATA — transcribed from Product_Guide_FromLarry.xlsx
+   ============================================================ */
+const TECH = {
+  EM:{label:"EM 125 kHz (ASK)",band:"125"},
+  PROX:{label:"HID Prox 125 kHz (FSK)",band:"125"},
+  CSN:{label:"Mifare CSN 13.56 MHz",band:"13"},
+  O2S_C1:{label:"O2S secure Mifare (C1)",band:"13"},
+  O2S_V2:{label:"O2S secure Mifare (V2)",band:"13"},
+  UHF:{label:"UHF (EPC-1800C)",band:"uhf"},
+  REMOTE:{label:"RF remote",band:"rf"},
+  BLE:{label:"Bluetooth (BLE)",band:"ble"},
+  NFC:{label:"NFC",band:"nfc"},
+  PIN:{label:"Keypad / PIN",band:"pin"},
+  BIO:{label:"Biometric",band:"bio"}
+};
+
+const EM = ["AT-ERC-26A-3001","AT-ERS-26A-3001","AT-ERK-26A-XXXX"];
+const CSN_C = ["AT-C1S-000-E000","AT-C1K-000-0SB0"];
+const CSN_D = ["AT-D1S-000-0000","AT-D1K-000-0SB0"];
+const O2S_C1 = ["RT-C1S-26A-3000","RT-C1K-26A-7SB0"];
+const O2S_V2 = ["RT-V2S-26A-3000","RT-V2K-26A-7SB0"];
+const UHF = ["LT-UVG-26A-3001","LT-UVH-26A-7000","LT-UVS-26A-3000","LT-UVT-26A-3001"];
+
+const CREDS = [
+  {id:"AT-ERC-26A-3001",tech:"EM",name:"EM clamshell card",form:"Clamshell card"},
+  {id:"AT-ERS-26A-3001",tech:"EM",name:"EM ISO card",form:"ISO card"},
+  {id:"AT-ERK-26A-XXXX",tech:"EM",name:"EM key fob",form:"Key fob",aliases:["AT-ERK-26A-7TB0","AT-ERK-26A-7RB0","AT-ERK"],note:"XXXX = fob style: 7TB0 twisted rectangular, 7RB0 round. (0SB0 shark tooth is Mifare only.)"},
+  {id:"HID-PROX",tech:"PROX",name:"HID-compatible 125 kHz Prox / Prox II",form:"Card or fob",sold:false,aliases:["PROX","PROX2","PROXII","HIDPROX","HID","PROXCARD"],note:"Rosslare does not sell these. The guide lists them as 'PROX, PROX 2'."},
+  {id:"AT-C1S-000-E000",tech:"CSN",name:"Mifare ID card",form:"ID card",aliases:["AT-C1S"]},
+  {id:"AT-C1K-000-0SB0",tech:"CSN",name:"Mifare shark-tooth fob",form:"Key fob",aliases:["AT-C1K"]},
+  {id:"AT-D1S-000-0000",tech:"CSN",name:"Mifare ISO card (D1)",form:"ISO card",aliases:["AT-D1S","AT-D1X-000-XXXX","AT-D1X","AT-D1S-000-0001"],note:"Listed as 'alt' for several readers. On the X6255/X6355 readers it's listed for configuration cards. The 2025 catalog and the Rosslare website list it as AT-D1S-000-0001."},
+  {id:"AT-D1K-000-0SB0",tech:"CSN",name:"Mifare shark-tooth fob (D1)",form:"Key fob",aliases:["AT-D1K"]},
+  {id:"RT-C1S-26A-3000",tech:"O2S_C1",name:"O2S ISO card (C1)",form:"ISO card",aliases:["RT-C1S"]},
+  {id:"RT-C1K-26A-7SB0",tech:"O2S_C1",name:"O2S key fob (C1)",form:"Key fob",aliases:["RT-C1K"]},
+  {id:"RT-V2S-26A-3000",tech:"O2S_V2",name:"O2S ISO card (V2)",form:"ISO card",aliases:["RT-V2S"]},
+  {id:"RT-V2K-26A-7SB0",tech:"O2S_V2",name:"O2S key fob (V2)",form:"Key fob",aliases:["RT-V2K"]},
+  {id:"LT-UVG-26A-3001",tech:"UHF",name:"UHF tag (WIDE)",form:"Tag",aliases:["LT-UVG"]},
+  {id:"LT-UVH-26A-7000",tech:"UHF",name:"UHF tag (HARD)",form:"Tag",aliases:["LT-UVH"]},
+  {id:"LT-UVS-26A-3000",tech:"UHF",name:"UHF ISO card",form:"ISO card",aliases:["LT-UVS","LT-UVS-3000"],note:"The guide lists this as LT-UVS-3000. The 2025 product catalog lists it as LT-UVS-26A-3000."},
+  {id:"LT-UVT-26A-3001",tech:"UHF",name:"UHF tag (TR)",form:"Tag",aliases:["LT-UVT"]},
+  {id:"SA-23-B2",tech:"REMOTE",name:"2-button remote",form:"Remote",aliases:["SA-23G-B2","SA-23-B2G"],note:"The guide uses SA-23-B2G and SA-23G-B2. The 2025 catalog and AY-L23 datasheet use SA-23-B2."},
+  {id:"SA-23-B4",tech:"REMOTE",name:"4-button remote",form:"Remote",aliases:["SA-23G-B4","SA-23-B4G"],note:"The guide uses SA-23-B4G and SA-23G-B4. The 2025 catalog and AY-L23 datasheet use SA-23-B4."},
+  {id:"RT-C4S-26A-3000",tech:"O2S_C1",name:"O2S ISO card, 4K (C1)",form:"ISO card",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"RT-C1S-38A-3000",tech:"O2S_C1",name:"O2S ISO card, 38-bit (C1)",form:"ISO card",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide. 38-bit Wiegand: confirm the panel/software is set up for 38-bit."},
+  {id:"RT-C4S-38A-3000",tech:"O2S_C1",name:"O2S ISO card, 4K, 38-bit (C1)",form:"ISO card",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide. 38-bit Wiegand: confirm the panel/software is set up for 38-bit."},
+  {id:"RT-C1K-38A-7SB0",tech:"O2S_C1",name:"O2S shark fob, 38-bit (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide. 38-bit Wiegand: confirm the panel/software is set up for 38-bit."},
+  {id:"RT-C1K-26A-7RB0",tech:"O2S_C1",name:"O2S ring fob (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"RT-C1K-38A-7RB0",tech:"O2S_C1",name:"O2S ring fob, 38-bit (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide. 38-bit Wiegand: confirm the panel/software is set up for 38-bit."},
+  {id:"RT-C1K-26A-7TB0",tech:"O2S_C1",name:"O2S twist fob (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"RT-C1K-38A-7TB0",tech:"O2S_C1",name:"O2S twist fob, 38-bit (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide. 38-bit Wiegand: confirm the panel/software is set up for 38-bit."},
+  {id:"RT-C4K-26A-7SB0",tech:"O2S_C1",name:"O2S shark fob, 4K (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"RT-C4K-38A-7SB0",tech:"O2S_C1",name:"O2S shark fob, 4K, 38-bit (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide. 38-bit Wiegand: confirm the panel/software is set up for 38-bit."},
+  {id:"RT-C4K-26A-7RB0",tech:"O2S_C1",name:"O2S ring fob, 4K (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"RT-C4K-38A-7RB0",tech:"O2S_C1",name:"O2S ring fob, 4K, 38-bit (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide. 38-bit Wiegand: confirm the panel/software is set up for 38-bit."},
+  {id:"RT-C4K-26A-7TB0",tech:"O2S_C1",name:"O2S twist fob, 4K (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"RT-C4K-38A-7TB0",tech:"O2S_C1",name:"O2S twist fob, 4K, 38-bit (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide. 38-bit Wiegand: confirm the panel/software is set up for 38-bit."},
+  {id:"AT-C1S-000-0000",tech:"CSN",name:"Mifare ISO card (not programmed)",form:"ISO card",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"AT-C4S-000-0000",tech:"CSN",name:"Mifare ISO card, 4K (not programmed)",form:"ISO card",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"AT-D4S-000-0001",tech:"CSN",name:"Mifare ISO card, 4K, 4-byte UID (not programmed)",form:"ISO card",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"AT-C1K-000-0RB0",tech:"CSN",name:"Mifare ring fob (not programmed)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"AT-C1K-000-0TB0",tech:"CSN",name:"Mifare twist fob (not programmed)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"AT-C4K-000-0SB0",tech:"CSN",name:"Mifare shark fob, 4K (not programmed)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"AT-C4K-000-0RB0",tech:"CSN",name:"Mifare ring fob, 4K (not programmed)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"AT-C4K-000-0TB0",tech:"CSN",name:"Mifare twist fob, 4K (not programmed)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"BLE",tech:"BLE",name:"Mobile credential (Bluetooth)",form:"Phone",pseudo:true,aliases:["BLUETOOTH","MOBILE","MOBILECREDENTIAL"]},
+  {id:"NFC",tech:"NFC",name:"Phone NFC",form:"Phone",pseudo:true},
+  {id:"PIN",tech:"PIN",name:"PIN code (keypad)",form:"Keypad entry",pseudo:true,aliases:["KEYPAD","PINCODE"]}
+];
+
+const T_EM={temp:"-31°C to 63°C (-25°F to 145°F)",volt:"5–16 VDC",ip:"IP65"};
+const T_X6={temp:"-35°C to 66°C (-31°F to 150°F)",volt:"8–16 VDC",range:'2.0"',ul:"N",ip:"IP65",out:"W,O"};
+const T_AYC={temp:"-30°C to 65°C (-22°F to 150°F)",volt:"5–15 VDC",ul:"Y",ip:"IP65",out:"W",convertible:true};
+const T_O2S={temp:"-31°C to 63°C (-24°F to 145°F)",range:'1.5"',ul:"N",out:"W,O"};
+
+const READERS = [
+  // 125 kHz EM
+  {id:"AY-K12C",fam:"AY-X12C",style:"Micromullion",techs:["EM"],creds:EM,...T_EM,range:'3.2"',ul:"Y",out:"W,S,C",note:"X12C series can be set to RS-232 or Clock & Data output (see manual)."},
+  {id:"AY-H12C",fam:"AY-X12C",style:"Single gang",techs:["EM"],creds:EM,...T_EM,range:'4.0"',ul:"Y",out:"W,S,C",note:"X12C series can be set to RS-232 or Clock & Data output (see manual)."},
+  {id:"AY-L12C",fam:"AY-X12C",style:"Full mullion",techs:["EM"],creds:EM,...T_EM,range:'4.0"',ul:"Y",out:"W,S,C",note:"X12C series can be set to RS-232 or Clock & Data output (see manual)."},
+  {id:"AY-Q12C",fam:"AY-X12C",style:"Single gang SS antivandal",techs:["EM"],creds:EM,...T_EM,range:'1.6"',ul:"Y",out:"W,S,C",note:"X12C series can be set to RS-232 or Clock & Data output (see manual)."},
+  {id:"AY-X14",style:"Micromullion",techs:["EM"],creds:EM,...T_EM,out:"C",status:"disc",repl:"AY-K12C",note:"Discontinued. Replaced by AY-X12C. Not on the Credentials tab; EM per the Readers tab."},
+  {id:"AY-X20",style:"Micromullion",techs:["EM"],creds:EM,...T_EM,out:"S",status:"disc",repl:"AY-K12C",note:"Discontinued. Replaced by AY-X12C.",aliases:["AY-X20X"]},
+  {id:"AY-X25",style:"Micromullion",techs:["CSN"],creds:[...CSN_C,...CSN_D],...T_EM,out:"W",status:"disc",repl:"AY-K6255",note:"Discontinued. Replaced by AY-X6255."},
+  // Remote
+  {id:"AY-L23",style:"Full mullion",techs:["REMOTE"],creds:["SA-23-B2","SA-23-B4"],temp:T_EM.temp,volt:"7–24 VDC",range:"210'",ul:"N",ip:"IP65",out:"W",note:"Long-range receiver for SA-23 remotes."},
+  // Multi
+  {id:"AY-K35",style:"Mullion",techs:["EM","PROX","CSN","BLE","NFC"],creds:[...EM,"HID-PROX",...CSN_C,...CSN_D,"BLE","NFC"],temp:"-35°C to 66°C (-31°F to 150°F)",volt:"8–16 VDC",range:"BLE 40', 125 kHz 3.2\", Mifare 2.0\"",ul:"N",ip:"IP68",out:"W,O",note:"Multi-technology reader."},
+  // Keypads / convertible
+  {id:"AYC-F54",fam:"AYC-X54",style:"Single gang",keypad:true,techs:["PIN"],creds:["PIN"],...T_AYC,range:"N/A"},
+  {id:"AYC-G54",fam:"AYC-X54",style:"Full mullion",keypad:true,techs:["PIN"],creds:["PIN"],...T_AYC,range:"N/A"},
+  {id:"AYC-Q54",fam:"AYC-X54",style:"Single gang SS antivandal",keypad:true,techs:["PIN"],creds:["PIN"],...T_AYC,range:"N/A"},
+  {id:"AYC-F60",fam:"AYC-X60",style:"Single gang",keypad:true,techs:["PIN","EM","PROX"],creds:["PIN",...EM,"HID-PROX"],...T_AYC,range:'2.4"'},
+  {id:"AYC-G60",fam:"AYC-X60",style:"Full mullion",keypad:true,techs:["PIN","EM","PROX"],creds:["PIN",...EM,"HID-PROX"],...T_AYC,range:'2.4"'},
+  {id:"AYC-Q60",fam:"AYC-X60",style:"Single gang SS antivandal",keypad:true,techs:["PIN","EM","PROX"],creds:["PIN",...EM,"HID-PROX"],...T_AYC,range:'2.4"'},
+  {id:"AYC-F64",fam:"AYC-X64",style:"Single gang",keypad:true,techs:["PIN","EM"],creds:["PIN",...EM],...T_AYC,range:'2.4"',status:"legacy",repl:"AYC-F60",note:"OK if the customer asks for it. Use the X60 series for new installs."},
+  {id:"AYC-G64",fam:"AYC-X64",style:"Full mullion",keypad:true,techs:["PIN","EM"],creds:["PIN",...EM],...T_AYC,range:'2.4"',status:"legacy",repl:"AYC-G60",note:"OK if the customer asks for it. Use the X60 series for new installs."},
+  {id:"AYC-Q64",fam:"AYC-X64",style:"Single gang SS antivandal",keypad:true,techs:["PIN","EM"],creds:["PIN",...EM],...T_AYC,range:'2.4"',status:"legacy",repl:"AYC-Q60",note:"OK if the customer asks for it. Use the X60 series for new installs."},
+  // Mifare CSN
+  {id:"AY-H6255",fam:"AY-X6255",style:"Single gang",techs:["CSN","NFC"],creds:[...CSN_C,"AT-D1S-000-0000","NFC"],...T_X6,cfg:true},
+  {id:"AY-K6255",fam:"AY-X6255",style:"Micromullion",techs:["CSN","NFC"],creds:[...CSN_C,"AT-D1S-000-0000","NFC"],...T_X6,cfg:true},
+  {id:"AY-L6255",fam:"AY-X6255",style:"Full mullion",techs:["CSN","NFC"],creds:[...CSN_C,"AT-D1S-000-0000","NFC"],...T_X6,cfg:true},
+  {id:"AY-Q6255",fam:"AY-X6255",style:"Single gang SS antivandal",techs:["CSN","NFC"],creds:[...CSN_C,"AT-D1S-000-0000","NFC"],...T_X6,cfg:true},
+  {id:"AY-H6355",fam:"AY-X6355",style:"Single gang",keypad:true,techs:["PIN","CSN","NFC"],creds:["PIN",...CSN_C,"AT-D1S-000-0000","NFC"],...T_X6,cfg:true,convertible:true,aliases:["AYC-H6355"]},
+  {id:"AY-Q6355",fam:"AY-X6355",style:"Single gang SS antivandal",keypad:true,techs:["PIN","CSN","NFC"],creds:["PIN",...CSN_C,"AT-D1S-000-0000","NFC"],...T_X6,cfg:true,convertible:true,aliases:["AYC-Q6355"]},
+  {id:"AY-H6255BT",style:"Single gang",techs:["CSN","BLE","NFC"],creds:[...CSN_C,...CSN_D,"BLE","NFC"],...T_X6,ip:"IP68"},
+  {id:"AY-H6355BT",style:"Single gang",keypad:true,techs:["PIN","CSN","BLE","NFC"],creds:["PIN",...CSN_C,...CSN_D,"BLE","NFC"],...T_X6,ip:"IP68"},
+  // UHF
+  {id:"AY-U915BT",style:'Panel 11.6" × 11.6"',techs:["UHF","BLE"],creds:[...UHF,"BLE"],temp:"-35°C to 60°C (-31°F to 140°F)",volt:"9–15 VDC (2 A)",range:"19'",ul:"N",ip:"IP67",out:"W,O"},
+  {id:"AY-U920BT",style:'Panel 14.4" × 14.4"',techs:["UHF","BLE"],creds:[...UHF,"BLE"],temp:"-35°C to 60°C (-31°F to 140°F)",volt:"10–15 VDC (2 A)",range:"39'",ul:"N",ip:"IP67",out:"W,O"},
+  // O2S
+  {id:"AY-G6270B+P00",fam:"AY-X6270",style:"Full mullion",techs:["O2S_C1"],creds:O2S_C1,...T_O2S,volt:"6–16 VDC",ip:"IP68"},
+  {id:"AY-H6270B+P00",fam:"AY-X6270",style:"Single gang",techs:["O2S_C1"],creds:O2S_C1,...T_O2S,volt:"6–16 VDC",ip:"IP68"},
+  {id:"AY-G6370B+P00",fam:"AY-X6370",style:"Full mullion",keypad:true,techs:["PIN","O2S_C1"],creds:["PIN",...O2S_C1],...T_O2S,volt:"7–16 VDC",ip:"IP65"},
+  {id:"AY-H6370B+P00",fam:"AY-X6370",style:"Single gang",keypad:true,techs:["PIN","O2S_C1"],creds:["PIN",...O2S_C1],...T_O2S,volt:"7–16 VDC",ip:"IP65"},
+  {id:"AY-G6280B+P00",fam:"AY-X6280",style:"Full mullion",techs:["O2S_V2"],creds:O2S_V2,...T_O2S,volt:"8–16 VDC",ip:"IP68"},
+  {id:"AY-H6280B+P00",fam:"AY-X6280",style:"Single gang",techs:["O2S_V2"],creds:O2S_V2,...T_O2S,volt:"8–16 VDC",ip:"IP68"},
+  {id:"AY-G6380B+P00",fam:"AY-X6380",style:"Full mullion",keypad:true,techs:["PIN","O2S_V2"],creds:["PIN",...O2S_V2],...T_O2S,volt:"9–16 VDC",ip:"IP65"},
+  {id:"AY-H6380B+P00",fam:"AY-X6380",style:"Single gang",keypad:true,techs:["PIN","O2S_V2"],creds:["PIN",...O2S_V2],...T_O2S,volt:"9–16 VDC",ip:"IP65"},
+  // Biometric
+  {id:"AY-B8520",style:"Custom indoor",techs:["EM","BIO"],creds:EM,status:"disc"},
+  {id:"AY-B8550",style:"Custom indoor",techs:["CSN","BIO"],creds:CSN_D,status:"disc"},
+  {id:"AY-B8620",style:"Full mullion outdoor",techs:["EM","BIO"],creds:EM,status:"disc"},
+  {id:"AY-B8650",style:"Full mullion outdoor",techs:["CSN","BIO"],creds:CSN_D,status:"disc"},
+  {id:"AY-B9120BT",style:"Custom indoor",techs:["EM","BLE","BIO"],creds:[...EM,"BLE"]},
+  {id:"AY-B9150BT",style:"Custom indoor",techs:["CSN","BLE","BIO"],creds:[...CSN_D,"BLE"]},
+  {id:"AY-B9250BT",style:"Custom indoor",techs:["CSN","BLE","BIO"],creds:[...CSN_D,"BLE"],note:"The guide's Readers tab says EM + Mifare. The AY-B9250BT datasheet (V02, Aug 2025) lists a 13.56 MHz MIFARE reader and BLE only, with no 125 kHz EM, which matches the Credentials tab."},
+  {id:"AY-B9350",style:"Custom indoor",keypad:true,techs:["PIN","EM","CSN","BIO","REMOTE"],creds:["PIN",...EM,...CSN_C,...CSN_D],note:"The guide shows fingerprint, facial and remote-fob support too."},
+  // Desktop enrollment
+  {id:"DR-12C",style:"Desktop enrollment",desktop:true,techs:["EM","PROX"],creds:[...EM,"HID-PROX"]},
+  {id:"DR-6255",style:"Desktop enrollment",desktop:true,techs:["CSN"],creds:[...CSN_C,...CSN_D]},
+  {id:"DR-6280",style:"Desktop enrollment",desktop:true,techs:["O2S_C1","O2S_V2"],creds:[...O2S_C1,...O2S_V2],note:"The 2025 catalog lists support for MIFARE Classic EV1 and DESFire EV1, which covers both O2S generations."},
+  {id:"DR-U955BT",style:"Desktop enrollment",desktop:true,techs:["UHF","CSN","BLE"],creds:[...UHF,"BLE"],aliases:["DR-U922BT"],note:"The guide's Readers tab says DR-U922BT. The Credentials tab and the 2025 product catalog both say DR-U955BT."}
+];
+READERS.forEach(r=>{r.kind="reader"; r.status=r.status||"current";});
+
+const STANDALONE = [
+  {id:"AC-Q41HB",techs:["PIN"],creds:["PIN"],style:"Single gang SS antivandal",desc:"Single gang box, stainless antivandal, water resistant",heater:"Y",ip:"IP54",temp:"-20°C to 60°C (-4°F to 140°F)",volt:"12–24 VDC / 12–24 VAC",status:"legacy",repl:"AC-Q41SB",note:"Legacy. Use AC-Q41SB."},
+  {id:"AC-Q41SB",techs:["PIN"],creds:["PIN"],style:"Single gang SS antivandal",desc:"Single gang box, stainless antivandal, water resistant",heater:"Y",ip:"IP65",temp:"-20°C to 60°C (-4°F to 140°F)",volt:"12–24 VDC / 16–24 VAC"},
+  {id:"AC-F43",techs:["PIN"],creds:["PIN"],style:"Single gang",desc:"Single gang, black plastic, epoxy potted",heater:"N",ip:"IP65",temp:"-30°C to 65°C (-22°F to 150°F)",volt:"12–24 VDC / 16–24 VAC"},
+  {id:"AC-G43",techs:["PIN"],creds:["PIN"],style:"Mullion",desc:"Mullion, black plastic, epoxy potted",heater:"N",ip:"IP65",temp:"-30°C to 65°C (-22°F to 150°F)",volt:"12–24 VDC / 16–24 VAC"},
+  {id:"AC-Q42HB",techs:["PIN","EM"],creds:["PIN",...EM],style:"Single gang SS antivandal",desc:"Single gang box, stainless antivandal, water resistant",heater:"Y",ip:"IP54",temp:"-20°C to 60°C (-4°F to 140°F)",volt:"12–24 VDC / 16–24 VAC",status:"legacy",repl:"AC-Q42SB",note:"Legacy. Use AC-Q42SB."},
+  {id:"AC-Q42SB",techs:["PIN","EM"],creds:["PIN",...EM],style:"Single gang SS antivandal",desc:"Single gang box, stainless antivandal, epoxy potted",heater:"Y",ip:"IP65",temp:"-20°C to 60°C (-4°F to 140°F)",volt:"12–24 VDC / 12–24 VAC"},
+  {id:"AC-F44",techs:["PIN","EM"],creds:["PIN",...EM],style:"Single gang",desc:"Single gang, black plastic, epoxy potted",heater:"N",ip:"IP65",temp:"-30°C to 65°C (-22°F to 150°F)",volt:"12–24 VDC / 16–24 VAC"},
+  {id:"AC-G44",techs:["PIN","EM"],creds:["PIN",...EM],style:"Mullion",desc:"Mullion, black plastic, epoxy potted",heater:"N",ip:"IP65",temp:"-30°C to 65°C (-22°F to 150°F)",volt:"12–24 VDC / 16–24 VAC"}
+];
+STANDALONE.forEach(s=>{s.kind="standalone"; s.keypad=true; s.status=s.status||"current"; s.ul="N";});
+
+const C_AC="90–265 VAC, 50–60 Hz", C_DC="12–16 VDC @ 1.5 A", TMP="0°C to 49°C (32°F to 120°F)";
+const CTRLS = [
+  {id:"AC-215IPBU",desc:"2-door controller with power supply and enclosure, Ethernet",doors:"2",readers:"2",conn:"ETH, RS-485",pwr:C_AC,lock:"2 A at 13.8 VDC",exp:"None",auxR:"2",auxI:"2",ul:"Y",batt:"12 V 7 Ah",line:"B"},
+  {id:"AC-215IP-DIN",desc:"2-door control module only, wall or DIN rail mount, Ethernet",doors:"2",readers:"2",conn:"ETH, RS-485",pwr:C_DC,lock:"N/A",exp:"None",auxR:"2",auxI:"2",ul:"Y",batt:"N/A",line:"B"},
+  {id:"AC-225BU",desc:"2 or 4-door controller with power supply and enclosure",doors:"2/4",readers:"2/4",conn:"RS-485",pwr:C_AC,lock:"2 A at 13.8 VDC",exp:"MD-D02B",auxR:"2/4",auxI:"2/4",ul:"Y",batt:"12 V 7 Ah",line:"B"},
+  {id:"AC-225IPBU",desc:"2 or 4-door controller with power supply and enclosure, Ethernet",doors:"2/4",readers:"2/4",conn:"ETH, RS-485",pwr:C_AC,lock:"2 A at 13.8 VDC",exp:"MD-D02B",auxR:"2/4",auxI:"2/4",ul:"Y",batt:"12 V 7 Ah",line:"B"},
+  {id:"AC-225IP-DIN",desc:"2 or 4-door control module only, wall or DIN rail mount, Ethernet",doors:"2/4",readers:"2/4",conn:"ETH, RS-485",pwr:C_DC,lock:"N/A",exp:"MD-D02B",auxR:"2/4",auxI:"2/4",ul:"Y",batt:"N/A",line:"B"},
+  {id:"AC-425BU",desc:"4 or 8-door controller with power supply and enclosure",doors:"4/8",readers:"4/8",conn:"RS-485",pwr:C_AC,lock:"2 A at 13.8 VDC",exp:"MD-D04B",auxR:"0",auxI:"0",ul:"Y",batt:"12 V 7 Ah",line:"B",note:"The AC-825IP is preferred: it has 2 inputs per door vs. 1 on the AC-425B. The AC-425B is OK for remote sites using port forwarding without a VPN."},
+  {id:"AC-425IPBU",desc:"4 or 8-door controller with power supply and enclosure, Ethernet",doors:"4/8",readers:"4/8",conn:"ETH, RS-485",pwr:C_AC,lock:"2 A at 13.8 VDC",exp:"MD-D04B",auxR:"0",auxI:"0",ul:"Y",batt:"12 V 7 Ah",line:"B",note:"The AC-825IP is preferred: it has 2 inputs per door vs. 1 on the AC-425B. The AC-425B is OK for remote sites using port forwarding without a VPN."},
+  {id:"AC-425IP-DIN",desc:"4 or 8-door control module only, wall or DIN rail mount, Ethernet",doors:"4/8",readers:"4/8",conn:"ETH, RS-485",pwr:C_DC,lock:"N/A",exp:"MD-D04B",auxR:"0",auxI:"0",ul:"Y",batt:"N/A",line:"B"},
+  {id:"AC-825IP-U",desc:"4 or 8-door controller with power supply and enclosure, Ethernet",doors:"4/8",readers:"4/8",conn:"ETH",pwr:C_AC,lock:"2 A at 13.8 VDC",exp:"D-805 / R-805 / S-805 / P-805",auxR:"2",auxI:"4",ul:"Y",batt:"12 V 7 Ah",temp:"-5°C to 50°C (23°F to 122°F)",line:"825",osdp:true,aliases:["AC-825IP","AC-825","AC825IPU"],note:"Door and reader counts are for the main board's Wiegand ports. 2 more readers can be added over OSDP (outputs 5 and 6)."},
+  {id:"AC-825IP-PCBA",desc:"4 or 8-door control module only, wall or DIN rail mount, Ethernet",doors:"4/8",readers:"4/8",conn:"ETH",pwr:C_DC,lock:"N/A",exp:"D-805 / R-805 / S-805 / P-805",auxR:"2",auxI:"4",ul:"Y",batt:"N/A",temp:"-5°C to 50°C (23°F to 122°F)",line:"825",osdp:true,note:"Door and reader counts are for the main board's Wiegand ports. 2 more readers can be added over OSDP (outputs 5 and 6)."},
+  // legacy boards still available for repair
+  {id:"AC-215-PCBA",desc:"2-door controller board only (legacy, repair)",doors:"2",readers:"2",conn:"RS-232/485",pwr:"12–16 VDC",lock:"N/A",exp:"None",auxR:"2",auxI:"2",ul:"N",batt:"N/A",line:"L",status:"legacy"},
+  {id:"AC-215IP-PCBA",desc:"2-door control module only, Ethernet (legacy, repair)",doors:"2",readers:"2",conn:"ETH, RS-232/485",pwr:"12–16 VDC",lock:"N/A",exp:"None",auxR:"2",auxI:"2",ul:"Y",batt:"N/A",line:"L",status:"legacy"},
+  {id:"AC-225IP-PCBA",desc:"2 or 4-door control module only, Ethernet (legacy, repair)",doors:"2/4",readers:"2/4",conn:"ETH, RS-232/485",pwr:"12–16 VDC",lock:"N/A",exp:"MD-D02",auxR:"2/4",auxI:"2/4",ul:"Y",batt:"N/A",line:"L",status:"legacy"},
+  {id:"AC-425IP-PCBA",desc:"4 or 8-door controller only, Ethernet (legacy, repair)",doors:"4/8",readers:"4/8",conn:"ETH, RS-232/485",pwr:"12–16 VDC",lock:"N/A",exp:"MD-D04",auxR:"2/4",auxI:"2/4",ul:"N",batt:"N/A",line:"L",status:"legacy"},
+  // legacy complete assemblies (not available)
+  {id:"AC-215",desc:"2-door controller with power supply and enclosure",doors:"2",readers:"2",conn:"RS-232/485",pwr:"16.5 VAC",lock:"1.5 A",exp:"None",auxR:"2",auxI:"2",ul:"N",batt:"12 V 7 Ah",line:"L",status:"disc"},
+  {id:"AC-215IP",desc:"2-door controller with power supply and enclosure, Ethernet",doors:"2",readers:"2",conn:"ETH, RS-232/485",pwr:"16.5 VAC",lock:"1.5 A",exp:"None",auxR:"2",auxI:"2",ul:"N",batt:"12 V 7 Ah",line:"L",status:"disc"},
+  {id:"AC-225",desc:"2 or 4-door controller with power supply and enclosure",doors:"2/4",readers:"2/4",conn:"RS-232/485",pwr:"16.5 VAC",lock:"1.5 A",exp:"MD-D02",auxR:"2/4",auxI:"2/4",ul:"Y",batt:"12 V 7 Ah",line:"L",status:"disc"},
+  {id:"AC-225-PCBA",desc:"2 or 4-door controller board only",doors:"2/4",readers:"2/4",conn:"RS-232/485",pwr:"12–16 VDC",lock:"N/A",exp:"MD-D02",auxR:"2/4",auxI:"2/4",ul:"Y",batt:"N/A",line:"L",status:"disc"},
+  {id:"AC-225IP",desc:"2 or 4-door controller with power supply and enclosure, Ethernet",doors:"2/4",readers:"2/4",conn:"ETH, RS-232/485",pwr:"16.5 VAC",lock:"1.5 A",exp:"MD-D02",auxR:"2/4",auxI:"2/4",ul:"Y",batt:"12 V 7 Ah",line:"L",status:"disc"},
+  {id:"AC-425",desc:"4 or 8-door controller with power supply and enclosure",doors:"4/8",readers:"4/8",conn:"RS-232/485",pwr:"16.5 VAC",lock:"1.5 A",exp:"MD-D04",auxR:"0",auxI:"0",ul:"N",batt:"12 V 7 Ah",line:"L",status:"disc"},
+  {id:"AC-425-PCBA",desc:"4 or 8-door controller board only",doors:"4/8",readers:"4/8",conn:"RS-232/485",pwr:"12–16 VDC",lock:"N/A",exp:"MD-D04",auxR:"0",auxI:"0",ul:"N",batt:"N/A",line:"L",status:"disc"},
+  {id:"AC-425IP",desc:"4 or 8-door controller with power supply and enclosure, Ethernet",doors:"4/8",readers:"4/8",conn:"ETH, RS-232/485",pwr:"16.5 VAC",lock:"1.5 A",exp:"MD-D04",auxR:"0",auxI:"0",ul:"N",batt:"12 V 7 Ah",line:"L",status:"disc"}
+];
+CTRLS.forEach(c=>{c.kind="controller"; c.status=c.status||"current"; c.temp=c.temp||TMP; c.relays="5 A at 30 VDC";});
+
+const EXPS = [
+  {id:"MD-D02B",desc:"Door expansion for B-series AC-225 panels",fits:["AC-225BU","AC-225IPBU","AC-225IP-DIN"]},
+  {id:"MD-D04B",desc:"Door expansion for B-series AC-425 panels",fits:["AC-425BU","AC-425IPBU","AC-425IP-DIN"]},
+  {id:"MD-D02",desc:"Door expansion for legacy AC-225 panels",fits:["AC-225","AC-225-PCBA","AC-225IP","AC-225IP-PCBA"],status:"legacy"},
+  {id:"MD-D04",desc:"Door expansion for legacy AC-425 panels",fits:["AC-425","AC-425-PCBA","AC-425IP","AC-425IP-PCBA"],status:"legacy"},
+  {id:"D-805",desc:"4 doors and readers. Up to 10 boards over OSDP, max 48 doors. That makes one AC-825 a single point of failure, so split across 2 AC-825s.",fits:["AC-825IP-U","AC-825IP-PCBA"]},
+  {id:"R-805",desc:"16 form C relay outputs, usually elevator control (one relay per floor). Rated 5 A DC, 150 W max.",fits:["AC-825IP-U","AC-825IP-PCBA"]},
+  {id:"S-805",desc:"16 supervised inputs for monitoring uncontrolled doors, windows, etc.",fits:["AC-825IP-U","AC-825IP-PCBA"]},
+  {id:"P-805",desc:"8 form C relay outputs and 16 supervised inputs",fits:["AC-825IP-U","AC-825IP-PCBA"]},
+  {id:"ME-1515",desc:"Expansion chassis. Holds two X-805 boards with a power supply for boards and locks.",fits:["AC-825IP-U","AC-825IP-PCBA"]},
+  {id:"PS-C25TBU",desc:"Secure power supply for running AYC convertible readers standalone. 100–240 VAC input, 14 VDC at 2 A for lock power.",acc:"convertible",aliases:["PS-C25T"]},
+  {id:"MD-25T",desc:"2-relay module for running AYC convertible readers standalone, embedded use. Needs a 12–15 VDC supply.",acc:"convertible"}
+];
+EXPS.forEach(e=>{e.kind="expansion"; e.status=e.status||"current";});
+
+const REXS = [
+  {id:"EX-06",type:"Piezo",desc:"Single gang, stainless, lighted round button with timer",style:"Single gang",volt:"10–24 VDC",output:"Relay 1 NO + 1 NC, 30 V at 2 A",term:"Terminal blocks",ul:"Y",ip:"IP65"},
+  {id:"EX-16",type:"Piezo",desc:"Mullion, stainless, lighted round button with timer",style:"Mullion",volt:"10–24 VDC",output:"Relay 1 NO + 1 NC, 30 V at 2 A",term:"Terminal blocks",ul:"Y",ip:"IP65"},
+  {id:"EX-07",type:"Piezo",desc:"Single gang, stainless, lighted square button with timer",style:"Single gang",volt:"10–24 VDC/VAC",output:"Relay 1 NO + 1 NC, 30 V at 2 A",term:"Pigtail",ul:"Y",ip:"IP65"},
+  {id:"EX-17",type:"Piezo",desc:"Mullion, stainless, lighted square button with timer",style:"Mullion",volt:"10–24 VDC/VAC",output:"Relay 1 NO + 1 NC, 30 V at 2 A",term:"Pigtail",ul:"Y",ip:"IP65"},
+  {id:"EX-H04",type:"Piezo",desc:"Single gang touch switch",style:"Single gang",volt:"8–30 VDC",output:"Open collector to GND, 30 V max 1 A",term:"Pigtail",ul:"N",ip:"NA"},
+  {id:"EX-H22",type:"Touchless",desc:"Single gang touchless motion switch",style:"Single gang",volt:"8–30 VDC",output:"Open collector to GND, 30 V max 1 A",term:"Pigtail",ul:"N",ip:"NA"}
+];
+REXS.forEach(x=>{x.kind="rex"; x.status="current"; x.note="Add suffix EO (EXIT printed below button) or OO (no printing).";});
+CREDS.forEach(c=>{c.kind="cred"; c.status="current";});
+
+const ALL = [...READERS,...STANDALONE,...CREDS,...CTRLS,...EXPS,...REXS];
+const BY = Object.fromEntries(ALL.map(p=>[p.id,p]));
+
+/* ---------- alias index ---------- */
+const norm = s => String(s).toUpperCase().replace(/[^A-Z0-9]/g,"");
+const INDEX = new Map(); // normalized alias -> [ids]
+function addAlias(a,id){const k=norm(a); if(k.length<2) return; const l=INDEX.get(k)||[]; if(!l.includes(id)) l.push(id); INDEX.set(k,l);}
+ALL.forEach(p=>{
+  const aliases=[p.id,...(p.aliases||[])];
+  if(p.fam) aliases.push(p.fam);
+  if(p.kind==="reader"||p.kind==="standalone"){
+    const base=p.id.replace(/B\+P00$/,"");
+    aliases.push(base, base.replace(/B$/,""));
+    const short=base.replace(/^AYC?-/,""); aliases.push(short, short.replace(/B$/,""));
+    if(p.fam){ const f=p.fam.replace(/^AYC?-/,""); aliases.push(f, f.replace(/^X/,"")); }
+  }
+  if(p.kind==="controller"){ aliases.push(p.id.replace(/^AC-/,"")); }
+  aliases.forEach(a=>addAlias(a,p.id));
+});
+function resolve(token){
+  const k=norm(token); if(k.length<3) return null;
+  if(INDEX.has(k)) return INDEX.get(k)[0];
+  // longest alias that the token starts with (handles suffixes like -BLK)
+  let best=null,bl=0;
+  for(const [a,ids] of INDEX){ if(a.length>=6 && k.startsWith(a) && a.length>bl){best=ids[0];bl=a.length;} }
+  return best;
+}
+
+/* ============================================================
+   COMPATIBILITY LOGIC
+   ============================================================ */
+const isReaderish = p => p && (p.kind==="reader"||p.kind==="standalone");
+function outputOf(c){
+  if(c.tech==="CSN") return "csn";
+  if(c.tech==="PIN") return "pin";
+  if(c.tech==="BLE"||c.tech==="NFC") return "mobile";
+  if(c.tech==="PROX") return "fc";
+  if(/-26A-/.test(c.id)) return "fc";
+  return "unspecified";
+}
+const OUT_TXT = {
+  fc:{t:"Facility code + card number",ex:"FC 101 · Card 23457"},
+  csn:{t:"Card serial number (CSN)",ex:"CSN 04A31F2C"},
+  pin:{t:"PIN code",ex:"PIN ••••"},
+  mobile:{t:"Mobile credential",ex:"per mobile app setup"},
+  unspecified:{t:"Not specified in the guide",ex:"verify"}
+};
+function techName(t){return TECH[t]?TECH[t].label:t;}
+
+function evalPair(r,c,needFC){
+  const res={r,c,out:outputOf(c)};
+  const listed=r.creds.includes(c.id);
+  if(listed){
+    res.status="ok";
+    res.msg=`Listed as compatible in the guide.`;
+    if(r.cfg && c.id==="AT-D1S-000-0000"){res.status="verify"; res.msg="Listed for this reader as a configuration card, not a user credential. Use AT-C1S / AT-C1K for users.";}
+    if(res.status==="ok" && res.out==="csn" && needFC){
+      res.status="csn";
+      res.msg=`This pair reads, but the panel gets the card's serial number, not a facility code and card number. The guide lists Mifare parts with "-000-" in the part number under the CSN column. Printed card numbers won't match what the software sees.`;
+    } else if(res.status==="ok" && res.out==="csn"){
+      res.msg+=" The panel gets the card serial number (CSN), so enroll cards by presenting them or with a DR-6255.";
+    }
+    if(c.sold===false) res.msg+=" Note: Rosslare doesn't sell HID Prox credentials. The customer has to source them.";
+    return res;
+  }
+  if(r.techs.includes(c.tech)){
+    res.status="verify";
+    res.msg=`The reader supports ${techName(c.tech)}, but this part isn't listed for it in the guide. Confirm with tech support before quoting.`;
+    return res;
+  }
+  const rb=r.techs.map(t=>TECH[t].band), cb=TECH[c.tech].band;
+  if(c.tech.startsWith("O2S") && r.techs.includes("CSN")){
+    res.status="csn"; res.out="csn";
+    res.msg=`CSN problem: this is a Mifare CSN reader (the AY-x6255 datasheet: "read the CSN… and output the CSN in Wiegand or OSDP"). It reads the O2S card's chip serial number instead of the programmed facility code and card number. The card will "read," but the number won't match the card and won't line up with O2S enrollment.`;
+    return res;
+  }
+  if(c.tech==="CSN" && r.techs.some(t=>t.startsWith("O2S"))){
+    res.status=needFC?"csn":"verify"; res.out="csn";
+    res.msg="Not listed in the guide. The O2S reader datasheets (2022) say these readers \"read CSN of non-O2S credentials,\" so a plain Mifare card (AT-…-000-…) will read as its serial number, not a facility code + card number. For FC + card #, use the matching RT- O2S cards.";
+    return res;
+  }
+  if(c.tech.startsWith("O2S") && r.techs.some(t=>t.startsWith("O2S"))){
+    res.status=needFC?"csn":"verify"; res.out="csn";
+    res.msg=`Wrong O2S generation for this reader in the guide. This reader is listed with ${r.techs.includes("O2S_C1")?"C1 (RT-C1S / RT-C1K)":"V2 (RT-V2S / RT-V2K)"} cards; this card is ${c.tech==="O2S_C1"?"C1":"V2"}. The 6270/6370 readers use C1, the 6280/6380 use V2. Per the datasheets, O2S readers fall back to the CSN for credentials they don't decode, so expect a serial number at best. Match the generation.`;
+    return res;
+  }
+  if(cb==="125" && rb.includes("125")){
+    res.status="no"; res.msg=`Both are 125 kHz but use different modulation: ${techName(c.tech)} vs. ${r.techs.filter(t=>TECH[t].band==="125").map(techName).join(", ")}. The reader won't read this card.`;
+    return res;
+  }
+  if(c.pseudo){
+    res.status="no";
+    res.msg = c.tech==="PIN" ? "This reader has no keypad." : c.tech==="BLE" ? "This reader has no Bluetooth, so no mobile credential." : "This reader has no NFC support listed.";
+    return res;
+  }
+  res.status="no";
+  res.msg=`Different technology. The reader reads ${r.techs.filter(t=>t!=="BIO").map(techName).join(", ")}; this credential is ${techName(c.tech)}. It won't read at all.`;
+  return res;
+}
+
+function credsFor(r,needFC){
+  return r.creds.map(id=>BY[id]).filter(c=>c && !c.pseudo && !(r.cfg && c.id==="AT-D1S-000-0000") && (!needFC || outputOf(c)==="fc"));
+}
+function readersFor(c,styleHint){
+  let list=[...READERS,...STANDALONE].filter(r=>r.creds.includes(c.id) && r.status==="current" && !r.desktop && !(r.cfg && c.id==="AT-D1S-000-0000"));
+  if(styleHint){ list.sort((a,b)=>(b.style===styleHint)-(a.style===styleHint)); }
+  return list;
+}
+function fixesFor(res,needFC){
+  const {r,c,status}=res; const out=[];
+  if(status==="ok") return out;
+  const good=credsFor(r,needFC);
+  if(good.length) out.push({lbl:`Credentials that work with ${r.id}${needFC?" and send FC + card #":""}:`,ids:good.slice(0,6).map(x=>x.id)});
+  const rs=readersFor(c,r.style).filter(x=>x.id!==r.id);
+  if(!(needFC && outputOf(c)==="csn") && rs.length) out.push({lbl:`Readers listed for ${c.id}${r.style?` (same style first)`:""}:`,ids:rs.slice(0,6).map(x=>x.id)});
+  if(needFC && status==="csn" && c.tech==="CSN" && !r.techs.some(t=>t.startsWith("O2S"))){
+    const o2s=READERS.filter(x=>x.techs.some(t=>t.startsWith("O2S")) && !x.desktop && x.status==="current" && (!!x.keypad===!!r.keypad || true));
+    o2s.sort((a,b)=>(b.style===r.style)-(a.style===r.style) || (!!b.keypad===!!r.keypad)-(!!a.keypad===!!r.keypad));
+    const pick=o2s[0];
+    if(pick) out.push({lbl:`For FC + card # on 13.56 MHz, use an O2S reader with its matching RT- cards, e.g. ${pick.id}:`,ids:[pick.id,...pick.creds.filter(id=>!BY[id].pseudo)]});
+  }
+  return out;
+}
+
+function systemChecks(items,needFC){
+  const out=[];
+  const readers=items.filter(isReaderish), ctrls=items.filter(p=>p.kind==="controller"), exps=items.filter(p=>p.kind==="expansion"), creds=items.filter(p=>p.kind==="cred");
+  items.forEach(p=>{
+    if(p.status==="disc") out.push({status:"no",title:p.id,msg:`Discontinued / not available${p.kind==="controller"?" as a complete assembly (repair boards only where listed)":""}.${p.repl?` Replacement: ${p.repl}.`:""}`,ids:p.repl?[p.repl]:[]});
+    else if(p.status==="legacy") out.push({status:"verify",title:p.id,msg:(p.note||"Legacy product. Available for repair or if the customer asks for it.")+(p.repl?` Preferred: ${p.repl}.`:""),ids:p.repl?[p.repl]:[]});
+  });
+  readers.forEach(r=>{
+    if(r.desktop) out.push({status:"info",title:r.id,msg:"Desktop enrollment reader. It connects to the PC for enrolling cards and isn't a door reader."});
+    if(r.kind==="standalone" && ctrls.length) out.push({status:"info",title:r.id,msg:"This is a standalone unit with its own relay. It doesn't need a panel; check whether an AYC convertible or panel reader was intended."});
+    if(r.convertible && !ctrls.length && !items.some(p=>p.acc==="convertible")) out.push({status:"info",title:r.id,msg:"Convertible reader. For standalone use (no panel), add a PS-C25TBU power supply or an MD-25T relay module.",ids:["PS-C25TBU","MD-25T"]});
+    if(ctrls.length && !r.desktop && r.kind==="reader"){
+      if(r.out && !r.out.includes("W")) out.push({status:"verify",title:`${r.id} → panel`,msg:`Output is ${r.out==="C"?"Clock & Data":"RS-232 serial"} only, not Wiegand. The guide doesn't list that input on these panels.`});
+    }
+    if(r.note && r.kind==="reader" && !r.desktop && r.status==="current" && /Readers tab|Credentials tab|Confirm/.test(r.note)) out.push({status:"verify",title:r.id,msg:r.note});
+  });
+  if(ctrls.length && readers.some(r=>r.out&&r.out.includes("O"))){
+    const osdpCtrl=ctrls.some(c=>c.osdp);
+    const osdpRdrs=readers.filter(r=>r.out&&r.out.includes("O")).map(r=>r.id);
+    if(osdpCtrl) out.push({status:"info",title:"OSDP",msg:`${osdpRdrs.join(", ")} can be wired over OSDP on the AC-825IP (Wiegand also works). OSDP adds 2 reader ports per sizing configuration.`});
+  }
+  exps.forEach(e=>{
+    if(!e.fits) return;
+    if(!ctrls.length){ out.push({status:"info",title:e.id,msg:`Needs a host panel: ${e.fits.join(", ")}.`}); return; }
+    const ok=ctrls.filter(c=>e.fits.includes(c.id));
+    if(ok.length) out.push({status:"ok",title:`${e.id} + ${ok.map(c=>c.id).join(", ")}`,msg:"Expansion matches the panel."});
+    else {
+      const legacyMix=(e.id.endsWith("B")&&ctrls.some(c=>c.line==="L"))||(/^MD-D0\d$/.test(e.id)&&ctrls.some(c=>c.line==="B"));
+      out.push({status:"no",title:`${e.id} + ${ctrls.map(c=>c.id).join(", ")}`,msg:legacyMix?"B-series expansions don't work on legacy panels, and legacy expansions don't work on B-series panels.":`This expansion fits ${e.fits.join(", ")} only.`,ids:e.fits.slice(0,3)});
+    }
+  });
+  if(readers.length && !creds.length) {}
+  return out;
+}
+
+
+/* ============================================================
+   SIMPLE VIEW UI
+   ============================================================ */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const state={reader:[],cred:[],ctrl:[]};
+let needFC=true;
+const SLOT_OF=p=>isReaderish(p)?"reader":p.kind==="cred"?"cred":(p.kind==="controller"||p.kind==="expansion")?"ctrl":null;
+const POOL={reader:[...READERS,...STANDALONE],cred:CREDS,ctrl:[...CTRLS,...EXPS]};
+const QUICK={reader:["AY-H6255","AY-K35","AY-H6270B+P00","AYC-F60","AY-U920BT"],cred:["AT-ERS-26A-3001","RT-C1S-26A-3000","AT-C1S-000-E000","HID-PROX","BLE"],ctrl:["AC-825IP-U","AC-425IPBU","AC-225IPBU"]};
+
+const SHORT={EM:"125 kHz prox",PROX:"HID prox",CSN:"Mifare (serial #)",O2S_C1:"Secure Mifare O2S",O2S_V2:"Secure Mifare O2S V2",UHF:"Long-range UHF",REMOTE:"Remote",BLE:"Bluetooth",NFC:"NFC",PIN:"Keypad",BIO:"Fingerprint"};
+function friendly(p){
+  if(p.kind==="reader"){ if(p.desktop) return "Desktop enrollment reader"; const t=p.techs.filter(x=>!["PIN","NFC","BIO"].includes(x)).map(x=>SHORT[x]); return `${t.length?t.join(" + "):"Keypad"} reader${p.keypad&&t.length?" with keypad":""}${p.techs.includes("BIO")?" + fingerprint":""} · ${p.style.toLowerCase()}`; }
+  if(p.kind==="standalone") return `Standalone keypad${p.techs.includes("EM")?" + prox":""} · ${p.style.toLowerCase()}`;
+  if(p.kind==="cred") return `${p.name}${p.sold===false?" (not sold by Rosslare)":""}`;
+  if(p.kind==="controller") return p.desc;
+  return p.desc||"";
+}
+const ICON={
+  reader:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10 7h4M12 17h.01"/></svg>',
+  cred:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="5.5" width="19" height="13" rx="2.5"/><path d="M6.5 14.5h4"/></svg>',
+  ctrl:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 9h2M7 13h2M13 9h4M13 13h4"/></svg>'
+};
+const CHECK='<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+const CROSS='<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+const BANG='<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v9M12 19h.01"/></svg>';
+const QMARK='<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M9 9a3 3 0 1 1 4.5 2.6c-.9.5-1.5 1.2-1.5 2.2V15M12 19h.01"/></svg>';
+
+function add(id,slot){ const p=BY[id]; if(!p) return; slot=slot||SLOT_OF(p); if(!slot) return; if(slot==="ctrl") $("#slot-ctrl").hidden=false; if(!state[slot].includes(id)) state[slot].push(id); render(); }
+function removeId(id){ for(const k in state) state[k]=state[k].filter(x=>x!==id); render(); }
+function swap(oldId,newId){ const slot=SLOT_OF(BY[newId]); const i=state[slot].indexOf(oldId); if(i>=0) state[slot][i]=newId; else if(!state[slot].includes(newId)) state[slot].push(newId); state[slot]=[...new Set(state[slot])]; render(); toast(`Swapped in ${newId}`); }
+
+function searchSlot(slot,q){
+  const k=norm(q); if(!k) return [];
+  const words=q.toLowerCase().split(/\s+/).filter(Boolean);
+  return POOL[slot].map(p=>{
+    const al=[p.id,...(p.aliases||[]),p.fam||""].map(norm); let s=0;
+    if(al.some(a=>a===k)) s=100; else if(al.some(a=>a.startsWith(k))) s=80; else if(al.some(a=>a.includes(k))) s=60;
+    else { for(const [a,ids] of INDEX){ if(ids.includes(p.id)&&a.startsWith(k)){s=55;break;} } }
+    if(!s){ const hay=(friendly(p)+" "+(p.style||"")+" "+(p.tech?SHORT[p.tech]+" "+techName(p.tech):"")+" "+(p.techs||[]).map(t=>SHORT[t]).join(" ")).toLowerCase(); if(words.every(w=>hay.includes(w))) s=30; }
+    if(s && p.status!=="current") s-=8;
+    return [s,p];
+  }).filter(x=>x[0]).sort((a,b)=>b[0]-a[0]).slice(0,8).map(x=>x[1]);
+}
+function wireSlot(slot){
+  const inp=$("#in-"+slot), menu=$("#menu-"+slot); let list=[],on=0;
+  const draw=()=>{ if(!inp.value.trim()){menu.hidden=true;return;}
+    menu.innerHTML=list.length?list.map((p,i)=>`<button type="button" class="${i===on?"on":""}" data-pick="${esc(p.id)}"><span><span class="pn">${esc(p.id)}</span>${p.status==="disc"?'<span class="old">DISCONTINUED</span>':p.status==="legacy"?'<span class="old">LEGACY</span>':""}</span><span class="d">${esc(friendly(p))}</span></button>`).join(""):`<div class="none">No match. Try part of the number, like "6255".</div>`;
+    menu.hidden=false; };
+  inp.addEventListener("input",()=>{list=searchSlot(slot,inp.value);on=0;draw();});
+  inp.addEventListener("keydown",e=>{
+    if(e.key==="ArrowDown"){on=Math.min(on+1,list.length-1);draw();e.preventDefault();}
+    else if(e.key==="ArrowUp"){on=Math.max(on-1,0);draw();e.preventDefault();}
+    else if(e.key==="Enter"){ if(list[on]){add(list[on].id,slot);inp.value="";list=[];draw();} e.preventDefault(); }
+    else if(e.key==="Escape"){inp.value="";list=[];draw();}
+  });
+  inp.addEventListener("blur",()=>setTimeout(()=>{menu.hidden=true;},150));
+  menu.addEventListener("mousedown",e=>{const b=e.target.closest("[data-pick]"); if(b){e.preventDefault(); add(b.dataset.pick,slot); inp.value=""; list=[]; draw(); }});
+  $("#quick-"+slot).innerHTML=`<span>Popular:</span>`+QUICK[slot].map(id=>`<button type="button" data-quick="${esc(id)}" data-slot="${slot}">${esc(id==="HID-PROX"?"HID prox":id==="BLE"?"Mobile (BLE)":id.replace("B+P00",""))}</button>`).join("");
+}
+["reader","cred","ctrl"].forEach(wireSlot);
+
+function renderPicked(){
+  for(const slot of ["reader","cred","ctrl"]){
+    $("#picked-"+slot).innerHTML=state[slot].map(id=>{const p=BY[id]; return `<div class="item"><span class="ico">${ICON[slot]}</span><span class="t"><b>${esc(id)}</b><span>${esc(friendly(p))}</span></span><button class="x" type="button" data-remove="${esc(id)}" aria-label="Remove ${esc(id)}">×</button></div>`;}).join("");
+    $("#slot-"+slot).classList.toggle("filled",state[slot].length>0);
+  }
+  $("#add-panel").hidden=!$("#slot-ctrl").hidden;
+}
+
+const LANG={
+  ok:{tone:"yes",chip:"Works"},
+  csn:{tone:"csn",chip:"Serial number only"},
+  verify:{tone:"warn",chip:"Check with tech support"},
+  no:{tone:"no",chip:"Won't work"}
+};
+function plain(res){
+  const {r,c,status}=res;
+  if(status==="ok") return `The ${friendly(r).split(" · ")[0].toLowerCase()} reads this ${c.form.toLowerCase()}.`+(c.sold===false?" Note: Rosslare doesn't sell HID prox cards, so the customer buys them elsewhere.":"")+(res.out==="csn"?" The system will see the card's serial number, which is fine when cards are enrolled by tapping them.":"");
+  if(status==="csn"){
+    if(c.tech.startsWith("O2S")&&r.techs.includes("CSN")) return `This reader only reads a card's hidden serial number (CSN). It will read the O2S card, but the number the system sees won't match the number printed on the card.`;
+    if(c.tech.startsWith("O2S")) return `Different O2S generation. The ${r.techs.includes("O2S_C1")?"6270/6370 readers use C1":"6280/6380 readers use V2"} cards. This one would most likely read only as a serial number.`;
+    if(c.tech==="CSN"&&r.techs.some(t=>t.startsWith("O2S"))) return `This is a blank Mifare card with no card number programmed. The O2S reader will only see its serial number.`;
+    return `These work together, but the system only sees the card's hidden serial number (CSN), not the number printed on the card.`;
+  }
+  if(status==="verify") return res.msg;
+  if(c.pseudo) return res.msg;
+  return `Different technology, so this reader can't read this ${c.form.toLowerCase()} at all. `+res.msg.replace(/^Different technology\. /,"");
+}
+function swapsFor(res){
+  const {r,c,status}=res; const out=[];
+  if(status==="ok") return out;
+  const cards=credsFor(r,needFC).slice(0,4);
+  if(cards.length) out.push({h:`Keep ${r.id}, use this card instead`,from:c.id,ids:cards.map(x=>x.id)});
+  if(!(needFC&&outputOf(c)==="csn")){
+    const rs=readersFor(c,r.style).filter(x=>x.id!==r.id && x.kind==="reader").slice(0,4);
+    if(rs.length) out.push({h:`Keep ${c.id}, use this reader instead`,from:r.id,ids:rs.map(x=>x.id)});
+  }
+  if(needFC && status==="csn" && !cards.length){
+    const o=READERS.filter(x=>x.techs.includes("O2S_C1")&&!x.desktop).sort((a,b)=>(b.style===r.style)-(a.style===r.style)||(!!b.keypad===!!r.keypad)-(!!a.keypad===!!r.keypad))[0];
+    if(o && c.tech==="CSN") out.push({h:`Or switch both to O2S for printed card numbers`,both:[[r.id,o.id],[c.id,"RT-C1S-26A-3000"]]});
+  }
+  return out;
+}
+function swapBtn(from,id){const p=BY[id]; return `<button type="button" class="swap" data-swap="${esc(from)}|${esc(id)}"><span class="arr">⇄</span><span><span class="pn">${esc(id)}</span><br><span class="d">${esc(friendly(p))}</span></span></button>`;}
+
+function renderAnswer(){
+  const A=$("#answer");
+  const readers=state.reader.map(id=>BY[id]), creds=state.cred.map(id=>BY[id]);
+  const items=[...readers,...creds,...state.ctrl.map(id=>BY[id])];
+  if(!readers.length || !creds.length){
+    let hint="";
+    if(readers.length && !creds.length){
+      const cs=credsFor(readers[0],needFC), all=credsFor(readers[0],false);
+      hint=`<div class="res"><div class="res-top"><span class="pair">Cards that work with ${esc(readers[0].id)}</span></div>${cs.length?`<div class="swaprow">${cs.map(c=>`<button type="button" class="swap" data-add="${esc(c.id)}"><span class="arr">+</span><span><span class="pn">${esc(c.id)}</span><br><span class="d">${esc(c.name)}</span></span></button>`).join("")}</div>`:`<p>${all.length?"This reader only reads card serial numbers, so no card gives a printed card number with it. Turn off the switch above if that's OK, or pick a different reader.":"This reader doesn't use cards (keypad / mobile only)."}</p>`}</div>`;
+    } else if(creds.length && !readers.length){
+      const rs=readersFor(creds[0]).filter(x=>x.kind==="reader").slice(0,8);
+      hint=`<div class="res"><div class="res-top"><span class="pair">Readers that work with ${esc(creds[0].id)}</span></div>${rs.length?`<div class="swaprow">${rs.map(r=>`<button type="button" class="swap" data-add="${esc(r.id)}"><span class="arr">+</span><span><span class="pn">${esc(r.id)}</span><br><span class="d">${esc(friendly(r))}</span></span></button>`).join("")}</div>`:"<p>No current door readers are listed for this card.</p>"}${needFC&&outputOf(creds[0])==="csn"?`<p style="margin-top:6px">Heads up: this is a serial-number-only card. It has no printed card number for the system to read.</p>`:""}</div>`;
+    }
+    A.innerHTML=(hint?"":`<div class="empty"><strong>Pick a reader and a card to get your answer.</strong><div class="steps"><div><span class="step">1</span> Choose the reader</div><div><span class="step">2</span> Choose the card or fob</div><div><span class="step">✓</span> See if they match</div></div></div>`)+(hint?`<div class="results">${hint}</div>`:"")+notesHtml(items);
+    return;
+  }
+  const pairs=[]; readers.forEach(r=>creds.forEach(c=>pairs.push(evalPair(r,c,needFC))));
+  const ord={no:0,csn:1,verify:2,ok:3}; pairs.sort((a,b)=>ord[a.status]-ord[b.status]);
+  const worst=pairs[0].status, single=pairs.length===1;
+  const V={
+    ok:{t:"yes",i:CHECK,h:single?"Yes, these work together.":"Yes, everything works together.",p:needFC?"The system will see the facility code and card number, so the numbers will match what's printed on the cards.":"Every reader can read every card on this list."},
+    csn:{t:"csn",i:BANG,h:"They'll read, but you'll only get serial numbers.",p:"The access system won't see the card number printed on the card. If the customer needs matching card numbers, use a suggested swap below."},
+    verify:{t:"warn",i:QMARK,h:"Probably, but check with tech support first.",p:"Nothing is clearly wrong, but the product guide doesn't confirm this combination."},
+    no:{t:"no",i:CROSS,h:single?"No, this card won't work with this reader.":"No, some of these won't work together.",p:"The reader can't read the card. Try one of the suggested swaps below."}
+  }[worst];
+  let html=`<div class="verdict t-${V.t}"><div class="badge">${V.i}</div><h2>${V.h}</h2><p>${V.p}</p></div><div class="results">`;
+  html+=pairs.map(res=>{
+    const L=LANG[res.status], o=OUT_TXT[res.out]; const sw=swapsFor(res);
+    const showGets=res.status!=="no";
+    return `<article class="res t-${L.tone}">
+      <div class="res-top"><span class="pair">${esc(res.r.id)}<em>+</em>${esc(res.c.id)}</span><span class="chip">${L.chip}</span></div>
+      <p>${esc(plain(res))}</p>
+      ${showGets?`<div class="gets ${res.out==="csn"&&needFC?"bad":""}"><span>System sees:</span><b>${res.out==="fc"?"Card number (facility code + card #)":res.out==="csn"?"Hidden serial number (CSN)":o.t}</b><span class="ex">e.g. ${esc(o.ex)}</span></div>`:""}
+      ${sw.length?`<div class="swaps">${sw.map(s=>`<h4>${esc(s.h)}</h4><div class="swaprow">${s.both?`<button type="button" class="swap" data-both="${esc(JSON.stringify(s.both))}"><span class="arr">⇄</span><span><span class="pn">${esc(s.both[0][1])} + ${esc(s.both[1][1])}</span><br><span class="d">Secure Mifare reader + O2S card with printed number</span></span></button>`:s.ids.map(id=>swapBtn(s.from,id)).join("")}</div>`).join("")}</div>`:""}
+    </article>`;}).join("");
+  html+=`</div>`+notesHtml(items);
+  html+=`<div class="actions"><button class="ghost" id="copy" type="button">Copy summary</button><button class="ghost" id="reset" type="button">Start over</button></div>`;
+  A.innerHTML=html;
+}
+function notesHtml(items){
+  const sys=systemChecks(items,needFC).filter(s=>s.status!=="ok"||s.title.includes("+"));
+  if(!sys.length) return "";
+  const tone={no:"no",csn:"csn",verify:"warn",info:"info",ok:"yes"};
+  return `<div class="notes"><h3>Good to know</h3>${sys.map(s=>`<div class="note t-${tone[s.status]}"><i></i><div><b>${esc(s.title)}</b> · ${esc(s.msg)}${s.ids&&s.ids.length?`<div class="swaprow">${s.ids.map(id=>`<button type="button" class="swap" data-add="${esc(id)}"><span class="arr">+</span><span class="pn">${esc(id)}</span></button>`).join("")}</div>`:""}</div></div>`).join("")}</div>`;
+}
+function render(){ renderPicked(); renderAnswer(); }
+
+function summary(){
+  const lines=["Rosslare match check"];
+  lines.push("Readers: "+(state.reader.join(", ")||"none"),"Cards: "+(state.cred.join(", ")||"none"));
+  if(state.ctrl.length) lines.push("Panel: "+state.ctrl.join(", "));
+  const lbl={ok:"WORKS",csn:"SERIAL NUMBER ONLY",verify:"CHECK WITH TECH SUPPORT",no:"WON'T WORK"};
+  state.reader.forEach(r=>state.cred.forEach(c=>{const res=evalPair(BY[r],BY[c],needFC); lines.push(`${lbl[res.status]}: ${r} + ${c}. ${plain(res)}`);}));
+  return lines.join("\n");
+}
+function toast(t){const el=$("#toast"); el.textContent=t; el.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>el.hidden=true,2000);}
+
+document.addEventListener("click",e=>{
+  const q=e.target.closest("[data-quick]"); if(q){add(q.dataset.quick,q.dataset.slot);return;}
+  const rm=e.target.closest("[data-remove]"); if(rm){removeId(rm.dataset.remove);return;}
+  const sw=e.target.closest("[data-swap]"); if(sw){const [a,b]=sw.dataset.swap.split("|"); swap(a,b); return;}
+  const bo=e.target.closest("[data-both]"); if(bo){JSON.parse(bo.dataset.both).forEach(([a,b])=>{const slot=SLOT_OF(BY[b]); const i=state[slot].indexOf(a); if(i>=0) state[slot][i]=b; else state[slot].push(b); state[slot]=[...new Set(state[slot])];}); render(); toast("Swapped to O2S"); return;}
+  const ad=e.target.closest("[data-add]"); if(ad){add(ad.dataset.add); toast(`Added ${ad.dataset.add}`); return;}
+  if(e.target.id==="reset"){state.reader=[];state.cred=[];state.ctrl=[];render();window.scrollTo({top:0,behavior:"smooth"});return;}
+  if(e.target.id==="copy"){const t=summary(); const ok=()=>toast("Summary copied"); const fb=()=>{const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");ok();}catch(_){toast("Couldn't copy");}ta.remove();}; try{navigator.clipboard.writeText(t).then(ok,fb);}catch(_){fb();} return;}
+});
+$("#add-panel").addEventListener("click",()=>{$("#slot-ctrl").hidden=false; renderPicked(); $("#in-ctrl").focus();});
+$("#needfc").addEventListener("change",e=>{needFC=e.target.checked; renderAnswer();});
+
+/* paste */
+$("#open-paste").addEventListener("click",()=>{$("#scrim").hidden=false; $("#paste").focus();});
+$("#paste-cancel").addEventListener("click",()=>{$("#scrim").hidden=true;});
+$("#scrim").addEventListener("click",e=>{ if(e.target.id==="scrim") $("#scrim").hidden=true; });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") $("#scrim").hidden=true; });
+$("#paste-go").addEventListener("click",()=>{
+  const tokens=$("#paste").value.split(/[\s,;|()\[\]\t]+/).filter(Boolean); const found=[];
+  tokens.forEach(t=>{ if(/^\d+x?$/i.test(t)) return; if(!(/[A-Za-z]/.test(t)&&/\d/.test(t))&&!/^(prox|ble|nfc|pin)$/i.test(t)) return; const id=resolve(t); if(id&&!found.includes(id)) found.push(id); });
+  found.forEach(id=>{const p=BY[id]; const slot=SLOT_OF(p); if(slot){ if(slot==="ctrl") $("#slot-ctrl").hidden=false; if(!state[slot].includes(id)) state[slot].push(id);} });
+  $("#found").textContent=found.length?`Found ${found.length}: ${found.join(", ")}`:"No Rosslare part numbers found.";
+  render(); if(found.length) setTimeout(()=>{$("#scrim").hidden=true;},700);
+});
+
+render();
+</script>
+
+</body>
+</html>
