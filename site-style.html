@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rosslare Compatibility Check (Site Style)</title>
+<meta name="description" content="Validate Rosslare reader, credential and controller combinations before quoting.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Maven+Pro:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#F2F4F3; --surface:#FFFFFF; --sunk:#E8ECEA; --ink:#14201C; --muted:#56655F; --line:#D5DDD9;
+  --accent:#0D5C66; --accent-ink:#FFFFFF; --accent-soft:#DCEBEC;
+  --ok:#1D7A44; --ok-soft:#E1F2E7; --verify:#8F6400; --verify-soft:#FBF0D5;
+  --csn:#B83C0A; --csn-soft:#FDE8DC; --no:#B0231A; --no-soft:#FBE3E1; --info:#3B5B8C; --info-soft:#E3EAF5;
+  --shadow:0 1px 2px rgba(20,32,28,.06),0 8px 24px rgba(20,32,28,.06);
+  --display:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --ground:#0E1513; --surface:#152019; --sunk:#1B2823; --ink:#E3ECE8; --muted:#94A49E; --line:#2A3833;
+  --accent:#5EC1C9; --accent-ink:#06282B; --accent-soft:#16373A;
+  --ok:#57C585; --ok-soft:#153323; --verify:#E3B447; --verify-soft:#352B12;
+  --csn:#FF9154; --csn-soft:#3A2114; --no:#F4776D; --no-soft:#3B1a18; --info:#8FB0E6; --info-soft:#1B2638;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#0E1513; --surface:#152019; --sunk:#1B2823; --ink:#E3ECE8; --muted:#94A49E; --line:#2A3833;
+  --accent:#5EC1C9; --accent-ink:#06282B; --accent-soft:#16373A;
+  --ok:#57C585; --ok-soft:#153323; --verify:#E3B447; --verify-soft:#352B12;
+  --csn:#FF9154; --csn-soft:#3A2114; --no:#F4776D; --no-soft:#3B1a18; --info:#8FB0E6; --info-soft:#1B2638;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font:15px/1.5 var(--body);padding-inline:16px;padding-block:0 48px}
+.wrap{max-width:1180px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);font-stretch:87%;text-wrap:balance;margin:0;line-height:1.15}
+.mono,code{font-family:var(--mono);font-size:.92em}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-block:28px 16px;border-bottom:1px solid var(--line)}
+.brand h1{font-size:clamp(26px,4vw,36px);font-weight:800;letter-spacing:-.01em}
+.brand p{margin:4px 0 0;color:var(--muted);max-width:60ch}
+.eyebrow{font:600 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+nav.tabs{display:flex;gap:4px;flex-wrap:wrap}
+nav.tabs button{border:1px solid transparent;background:none;padding:8px 14px;border-radius:6px;cursor:pointer;color:var(--muted);font-weight:500}
+nav.tabs button:hover{color:var(--ink);background:var(--sunk)}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--ground)}
+
+section.tab{padding-top:24px}
+
+/* check layout */
+.check{display:grid;grid-template-columns:minmax(0,370px) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:860px){.check{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;box-shadow:var(--shadow)}
+.inputs{display:flex;flex-direction:column;gap:18px}
+.field-label{display:block;font:600 11px/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.search{position:relative}
+.search input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:7px;background:var(--ground);font-family:var(--mono);font-size:15px}
+.search input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.suggest{position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);z-index:20;max-height:340px;overflow:auto;padding:4px}
+.suggest button{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;width:100%;text-align:left;background:none;border:0;padding:8px 10px;border-radius:6px;cursor:pointer}
+.suggest button:hover,.suggest button.active{background:var(--accent-soft)}
+.suggest .pn{font-family:var(--mono);font-weight:600}
+.suggest .desc{grid-column:2;color:var(--muted);font-size:13px}
+.kind{font:600 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:4px 6px;border-radius:4px;background:var(--sunk);color:var(--muted);align-self:center;white-space:nowrap}
+.hint{font-size:13px;color:var(--muted);margin:6px 0 0}
+.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.or::before,.or::after{content:"";flex:1;border-top:1px solid var(--line)}
+.picks{display:grid;gap:8px}
+.picks select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:var(--ground)}
+details.paste summary{cursor:pointer;font-weight:600;list-style:none;display:flex;align-items:center;gap:8px}
+details.paste summary::-webkit-details-marker{display:none}
+details.paste summary::before{content:"+";font-family:var(--mono);width:18px;height:18px;display:inline-grid;place-items:center;border:1px solid var(--line);border-radius:4px;font-size:13px}
+details.paste[open] summary::before{content:"–"}
+textarea{width:100%;min-height:110px;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:7px;background:var(--ground);font-family:var(--mono);font-size:13px;resize:vertical}
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:7px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.small{padding:5px 10px;font-size:13px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.paste-result{font-size:13px;margin-top:8px;color:var(--muted)}
+.paste-result .mono{color:var(--ink)}
+
+.toggle{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:8px;background:var(--sunk);cursor:pointer}
+.toggle input{margin-top:3px;accent-color:var(--accent);width:16px;height:16px;flex:none}
+.toggle strong{display:block;font-weight:600}
+.toggle span{font-size:13px;color:var(--muted)}
+
+.basket{display:flex;flex-direction:column;gap:10px}
+.basket-group h4{margin:0 0 6px;font:600 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:6px;background:var(--ground);font-family:var(--mono);font-size:13px;font-weight:500;overflow:hidden}
+.chip button{background:none;border:0;cursor:pointer;padding:5px 8px}
+.chip .open:hover{color:var(--accent);text-decoration:underline}
+.chip .x{border-left:1px solid var(--line);color:var(--muted);padding:5px 8px}
+.chip .x:hover{color:var(--no);background:var(--no-soft)}
+.empty{color:var(--muted);font-size:14px}
+
+/* results */
+.results{display:flex;flex-direction:column;gap:16px;min-width:0}
+.verdict{border-radius:10px;padding:18px 20px;border:1px solid var(--line);background:var(--surface);display:grid;grid-template-columns:auto 1fr;gap:4px 16px;align-items:center;box-shadow:var(--shadow)}
+.verdict .dot{grid-row:span 2;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font:800 22px/1 var(--display);color:var(--surface)}
+.verdict h2{font-size:clamp(20px,2.6vw,26px);font-weight:750}
+.verdict p{margin:0;color:var(--muted)}
+.v-ok{border-color:var(--ok)} .v-ok .dot{background:var(--ok)}
+.v-verify{border-color:var(--verify)} .v-verify .dot{background:var(--verify)}
+.v-csn{border-color:var(--csn)} .v-csn .dot{background:var(--csn)}
+.v-no{border-color:var(--no)} .v-no .dot{background:var(--no)}
+.v-idle .dot{background:var(--muted)}
+.counts{display:flex;flex-wrap:wrap;gap:6px;grid-column:2;margin-top:6px}
+
+.pill{display:inline-flex;align-items:center;gap:6px;font:600 12px/1 var(--body);padding:5px 9px;border-radius:999px;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.p-ok{color:var(--ok);background:var(--ok-soft)}
+.p-verify{color:var(--verify);background:var(--verify-soft)}
+.p-csn{color:var(--csn);background:var(--csn-soft)}
+.p-no{color:var(--no);background:var(--no-soft)}
+.p-info{color:var(--info);background:var(--info-soft)}
+
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.sec-head h3{font-size:18px;font-weight:700}
+.sec-head .sub{color:var(--muted);font-size:13px}
+
+.pairs{display:flex;flex-direction:column;gap:10px}
+.pair{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 16px}
+.pair.s-no{box-shadow:inset 4px 0 0 var(--no)} .pair.s-csn{box-shadow:inset 4px 0 0 var(--csn)}
+.pair.s-verify{box-shadow:inset 4px 0 0 var(--verify)} .pair.s-ok{box-shadow:inset 4px 0 0 var(--ok)}
+.pair.s-info{box-shadow:inset 4px 0 0 var(--info)}
+.pair-title{font-family:var(--mono);font-weight:600;font-size:14px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.pair-title .times{color:var(--muted);font-weight:400}
+.pair-title button{background:none;border:0;padding:0;font:inherit;cursor:pointer;color:inherit;text-decoration:underline dotted var(--muted);text-underline-offset:3px}
+.pair-body{grid-column:1/-1;color:var(--ink);font-size:14px}
+.pair-body p{margin:0}
+.readout{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:13px;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
+.readout .val{font-family:var(--mono);color:var(--ink);background:var(--sunk);padding:2px 6px;border-radius:4px}
+.readout .val.bad{color:var(--csn);background:var(--csn-soft)}
+.fix{grid-column:1/-1;display:flex;flex-direction:column;gap:6px;font-size:13px}
+.fix .row{gap:6px}
+.fix .lbl{color:var(--muted)}
+.add{font-family:var(--mono);font-size:12px;border:1px dashed var(--accent);color:var(--accent);background:none;border-radius:5px;padding:3px 7px;cursor:pointer}
+.add:hover{background:var(--accent-soft)}
+
+.toolbar{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+
+/* catalog */
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.filters input,.filters select{padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface)}
+.filters input{flex:1;min-width:180px}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 11px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--sunk);position:sticky;top:0}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--accent-soft)}
+td.pn{font-family:var(--mono);font-weight:600;white-space:nowrap}
+.tag{display:inline-block;font:500 12px/1 var(--body);padding:3px 7px;border-radius:4px;background:var(--sunk);margin:1px 2px 1px 0;white-space:nowrap}
+.tag.t-disc{background:var(--no-soft);color:var(--no)}
+.tag.t-legacy{background:var(--verify-soft);color:var(--verify)}
+.tag.t-cur{background:var(--ok-soft);color:var(--ok)}
+
+/* sizing */
+.sizing{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.sizing .panel h3{font-size:19px;margin-bottom:4px}
+.form{display:grid;gap:12px;margin:14px 0}
+.form label{display:grid;gap:4px;font-size:14px}
+.form input[type=number]{padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:var(--ground);font-family:var(--mono);width:140px}
+.bom{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.bom div{background:var(--sunk);border-radius:8px;padding:12px}
+.bom b{display:block;font:800 30px/1 var(--display);font-variant-numeric:tabular-nums}
+.bom span{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.note{font-size:13px;color:var(--muted);margin:10px 0 0}
+.warnbox{margin-top:10px;padding:10px 12px;border-radius:8px;background:var(--verify-soft);color:var(--ink);font-size:13px}
+
+/* about */
+.about{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+.about h3{font-size:18px;margin-bottom:8px}
+.about ol,.about ul{margin:0;padding-left:20px;display:grid;gap:8px;font-size:14px}
+.about .panel p{margin:0 0 10px;max-width:68ch}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(10,16,14,.45);z-index:50;display:flex;justify-content:flex-end}
+.drawer{background:var(--surface);width:min(520px,100%);height:100%;overflow:auto;padding:24px 22px calc(24px + env(safe-area-inset-bottom,0px));border-left:1px solid var(--line)}
+.drawer .close{float:right}
+.drawer h2{font-family:var(--mono);font-stretch:100%;font-size:22px;font-weight:600;margin:6px 0 4px}
+.drawer .lead{color:var(--muted);margin:0 0 14px}
+dl.specs{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0 0 18px;font-size:14px}
+dl.specs dt{color:var(--muted)}
+dl.specs dd{margin:0}
+.drawer h4{margin:18px 0 8px;font:600 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.drawer .chips .chip{cursor:default}
+.drawer .actions{margin-top:20px}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--ground);padding:10px 16px;border-radius:8px;font-size:14px;z-index:60}
+@media (prefers-reduced-motion:no-preference){.pair,.verdict{transition:box-shadow .2s}}
+</style>
+<style>
+/* ===== Alternate view: styled after rosslaresecurity.com (light, single theme) ===== */
+:root, :root:not([data-theme="light"]), :root[data-theme="dark"]{
+  color-scheme:light;
+  --ground:#FFFFFF; --surface:#FFFFFF; --sunk:#F3F3F3; --ink:#464646; --muted:#818181; --line:#D6D6D6;
+  --accent:#EA2924; --accent-ink:#FFFFFF; --accent-soft:#FDECEB;
+  --ok:#2E7D32; --ok-soft:#E8F3E9; --verify:#946200; --verify-soft:#FBF1D9;
+  --csn:#C45A00; --csn-soft:#FDEEDF; --no:#A3160F; --no-soft:#F9E1DF; --info:#00789E; --info-soft:#E1F2F8;
+  --shadow:none;
+  --display:"Maven Pro",Arial,Helvetica,sans-serif; --body:"Maven Pro",Arial,Helvetica,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:light;
+  --ground:#FFFFFF; --surface:#FFFFFF; --sunk:#F3F3F3; --ink:#464646; --muted:#818181; --line:#D6D6D6;
+  --accent:#EA2924; --accent-ink:#FFFFFF; --accent-soft:#FDECEB;
+  --ok:#2E7D32; --ok-soft:#E8F3E9; --verify:#946200; --verify-soft:#FBF1D9;
+  --csn:#C45A00; --csn-soft:#FDEEDF; --no:#A3160F; --no-soft:#F9E1DF; --info:#00789E; --info-soft:#E1F2F8;}}
+body{font-size:15px;background:var(--ground)}
+h1,h2,h3{font-stretch:100%}
+.wrap{max-width:1140px}
+
+/* header bar */
+.top{border-bottom:1px solid var(--line);padding-block:22px 0;align-items:center}
+.brand{display:flex;flex-direction:column;gap:2px}
+.brand .eyebrow{color:var(--muted);letter-spacing:.18em;font-family:var(--body);font-weight:600;margin:0}
+.brand h1{font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#3a3a3a}
+.brand p{display:none}
+nav.tabs{gap:0;align-self:flex-end}
+nav.tabs button{border-radius:0;padding:14px 18px;text-transform:uppercase;font-size:13px;letter-spacing:.06em;color:#555;border:0;border-bottom:3px solid transparent;font-weight:500}
+nav.tabs button:hover{background:none;color:var(--accent)}
+nav.tabs button[aria-selected="true"]{background:none;color:var(--accent);border-bottom-color:var(--accent)}
+
+/* hero band + breadcrumb */
+.hero{margin:0 -16px;background:linear-gradient(180deg,#D9D9D9 0%,#A9A9A9 100%);padding:44px 16px 40px;text-align:center;color:#fff}
+.hero .k{font:800 13px/1 var(--display);letter-spacing:.22em;text-transform:uppercase;opacity:.9}
+.hero h2{font:900 clamp(26px,4.4vw,44px)/1.1 var(--display);text-transform:uppercase;margin-top:10px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.18)}
+.hero p{max-width:680px;margin:12px auto 0;font-size:15px;color:#fff;opacity:.95}
+.crumbs{font-size:12px;color:var(--muted);padding:12px 0;border-bottom:1px solid var(--line)}
+.crumbs b{color:var(--accent);font-weight:500}
+section.tab{padding-top:28px}
+
+/* surfaces: square, flat */
+.panel,.verdict,.pair,.tablewrap,.suggest,.drawer,.toggle,.bom div,.warnbox,textarea,.search input,.picks select,.filters input,.filters select,.form input[type=number]{border-radius:0!important}
+.panel{box-shadow:none;border-color:var(--line)}
+.field-label,.basket-group h4,.drawer h4,th{font-family:var(--body);font-weight:700;letter-spacing:.08em;color:#666}
+.sec-head h3{font-size:20px;font-weight:800;text-transform:uppercase;color:#666;letter-spacing:.02em}
+.verdict{box-shadow:none;border-width:1px;border-left-width:6px}
+.verdict h2{font-weight:800;color:#3a3a3a}
+.verdict .dot{border-radius:0}
+.pair{border-radius:0}
+.toggle{background:var(--sunk);border:1px solid var(--line)}
+
+/* buttons: red outline, uppercase, square */
+.btn{border-radius:0;border:1px solid var(--accent);color:var(--accent);background:#fff;text-transform:uppercase;font-size:12px;letter-spacing:.06em;font-weight:600}
+.btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:#fff}
+.add{border-radius:0;border-style:solid}
+.chip{border-radius:0;background:#fff}
+.seg button{border-radius:0;text-transform:uppercase;font-size:12px;letter-spacing:.05em}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.pill{border-radius:2px;text-transform:uppercase;font-size:11px;letter-spacing:.05em}
+.tag{border-radius:0}
+.kind{border-radius:0}
+th{background:#F3F3F3}
+tbody tr:hover{background:#FAFAFA}
+td.pn{color:#3a3a3a}
+.bom b{font-weight:900;color:#3a3a3a}
+.eyebrow{color:var(--accent)}
+.sizing .panel h3,.about h3{text-transform:uppercase;font-weight:800;color:#666}
+.site-foot{margin-top:40px;border-top:1px solid var(--line);padding-block:16px;font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between}
+.site-foot a{color:var(--accent);text-decoration:none}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="eyebrow">Internal sales tool · <a href="index.html">Switch to standard view</a></div>
+      <h1>Rosslare Compatibility Check</h1>
+      <p>Enter the readers, cards and panels on a quote. Each reader and card pair gets a verdict, plus a note on whether the panel will receive a facility code and card number or just a card serial number (CSN).</p>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button role="tab" data-tab="check" id="tab-check">Check a quote</button>
+      <button role="tab" data-tab="catalog" id="tab-catalog">Product catalog</button>
+      <button role="tab" data-tab="sizing" id="tab-sizing">AC-825 sizing</button>
+      <button role="tab" data-tab="about" id="tab-about">About the data</button>
+    </nav>
+  </header>
+  <div class="hero">
+    <div class="k">Sales tools</div>
+    <h2>Compatibility Check</h2>
+    <p>Validate readers, credentials and panels before quoting. See whether the panel will receive a facility code + card number or just the card serial number (CSN).</p>
+  </div>
+  <div class="crumbs">Home &gt; Sales tools &gt; <b>Compatibility Check</b></div>
+
+  <!-- CHECK -->
+  <section class="tab" id="check" role="tabpanel">
+    <div class="check">
+      <div class="panel inputs">
+        <div>
+          <label class="field-label" for="q">Type a part or model number</label>
+          <div class="search">
+            <input id="q" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. AY-H6255, 6270, AT-C1S, 825">
+            <div class="suggest" id="suggest" hidden></div>
+          </div>
+          <p class="hint">Partial numbers work: <span class="mono">6255</span>, <span class="mono">H6355</span>, <span class="mono">ERS</span>, <span class="mono">prox</span>.</p>
+        </div>
+
+        <div class="or">or pick from a list</div>
+        <div class="picks">
+          <select id="pick-reader" aria-label="Add a reader"></select>
+          <select id="pick-cred" aria-label="Add a credential"></select>
+          <select id="pick-ctrl" aria-label="Add a panel or expansion"></select>
+        </div>
+
+        <div class="or">or paste</div>
+        <details class="paste" id="paste-box">
+          <summary>Paste a quote, email or BOM</summary>
+          <textarea id="paste" spellcheck="false" placeholder="10  AY-H6255 Mifare reader&#10;250 RT-C1S-26A-3000&#10;1   AC-825IP-U"></textarea>
+          <div class="row" style="margin-top:8px">
+            <button class="btn primary small" id="paste-go">Find part numbers</button>
+            <button class="btn small" id="paste-clear">Clear text</button>
+          </div>
+          <div class="paste-result" id="paste-result"></div>
+        </details>
+
+        <label class="toggle" for="needfc">
+          <input type="checkbox" id="needfc" checked>
+          <div><strong>Customer needs facility code + card number</strong>
+          <span>Leave this on unless the customer has confirmed they'll enroll cards by serial number (CSN). Examples: printed card numbers, matching an existing 26-bit system, or bulk importing card lists.</span></div>
+        </label>
+
+        <div>
+          <div class="sec-head" style="margin-bottom:8px">
+            <span class="field-label" style="margin:0">On this quote</span>
+            <div class="row"><button class="btn small" id="example">Load example</button><button class="btn small" id="clear">Clear all</button></div>
+          </div>
+          <div class="basket" id="basket"></div>
+        </div>
+      </div>
+
+      <div class="results" id="results" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- CATALOG -->
+  <section class="tab" id="catalog" role="tabpanel" hidden>
+    <div class="filters">
+      <div class="seg" id="cat-kind"></div>
+      <select id="cat-tech" aria-label="Filter by technology"></select>
+      <input id="cat-q" type="search" placeholder="Filter by part number or description" aria-label="Filter catalog">
+    </div>
+    <div class="tablewrap"><table>
+      <thead id="cat-head"></thead>
+      <tbody id="cat-body"></tbody>
+    </table></div>
+    <p class="note">Select a row to see its specs and compatible products. Status comes from the guide's "Avail", "disc" and "legacy" markings.</p>
+  </section>
+
+  <!-- SIZING -->
+  <section class="tab" id="sizing" role="tabpanel" hidden>
+    <div class="sizing">
+      <div class="panel">
+        <div class="eyebrow">Doors</div>
+        <h3>AC-825IP door system</h3>
+        <p class="note" style="margin:0">Reader ports set the limit, not doors. A door with a reader on each side (in/out) uses two reader ports.</p>
+        <div class="form">
+          <label>Doors <input type="number" id="sz-doors" min="1" max="96" value="12"></label>
+          <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="sz-inout" style="accent-color:var(--accent)"> Readers on both sides (in and out)</label>
+          <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="sz-split" checked style="accent-color:var(--accent)"> Split at 24 readers per AC-825 (recommended)</label>
+        </div>
+        <div id="sz-out"></div>
+      </div>
+      <div class="panel">
+        <div class="eyebrow">Elevators</div>
+        <h3>Elevator control (per elevator)</h3>
+        <p class="note" style="margin:0">Each elevator needs its own AC-825IP. Its spare outputs can run doors, but that lowers the floor count. An R-805 handles 16 floors.</p>
+        <div class="form">
+          <label>Floors served <input type="number" id="el-floors" min="1" max="84" value="12"></label>
+        </div>
+        <div id="el-out"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="tab" id="about" role="tabpanel" hidden>
+    <div class="about" id="about-body"></div>
+  </section>
+</div>
+
+<div class="wrap"><footer class="site-foot"><span>Internal sales reference. Not an official Rosslare publication. Verify anything marked "Verify" with tech support.</span><a href="index.html">Switch to standard view</a></footer></div>
+<div class="scrim" id="scrim" hidden><aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-title"></aside></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ============================================================
+   DATA — transcribed from Product_Guide_FromLarry.xlsx
+   ============================================================ */
+const TECH = {
+  EM:{label:"EM 125 kHz (ASK)",band:"125"},
+  PROX:{label:"HID Prox 125 kHz (FSK)",band:"125"},
+  CSN:{label:"Mifare CSN 13.56 MHz",band:"13"},
+  O2S_C1:{label:"O2S secure Mifare (C1)",band:"13"},
+  O2S_V2:{label:"O2S secure Mifare (V2)",band:"13"},
+  UHF:{label:"UHF (EPC-1800C)",band:"uhf"},
+  REMOTE:{label:"RF remote",band:"rf"},
+  BLE:{label:"Bluetooth (BLE)",band:"ble"},
+  NFC:{label:"NFC",band:"nfc"},
+  PIN:{label:"Keypad / PIN",band:"pin"},
+  BIO:{label:"Biometric",band:"bio"}
+};
+
+const EM = ["AT-ERC-26A-3001","AT-ERS-26A-3001","AT-ERK-26A-XXXX"];
+const CSN_C = ["AT-C1S-000-E000","AT-C1K-000-0SB0"];
+const CSN_D = ["AT-D1S-000-0000","AT-D1K-000-0SB0"];
+const O2S_C1 = ["RT-C1S-26A-3000","RT-C1K-26A-7SB0"];
+const O2S_V2 = ["RT-V2S-26A-3000","RT-V2K-26A-7SB0"];
+const UHF = ["LT-UVG-26A-3001","LT-UVH-26A-7000","LT-UVS-26A-3000","LT-UVT-26A-3001"];
+
+const CREDS = [
+  {id:"AT-ERC-26A-3001",tech:"EM",name:"EM clamshell card",form:"Clamshell card"},
+  {id:"AT-ERS-26A-3001",tech:"EM",name:"EM ISO card",form:"ISO card"},
+  {id:"AT-ERK-26A-XXXX",tech:"EM",name:"EM key fob",form:"Key fob",aliases:["AT-ERK-26A-7TB0","AT-ERK-26A-7RB0","AT-ERK"],note:"XXXX = fob style: 7TB0 twisted rectangular, 7RB0 round. (0SB0 shark tooth is Mifare only.)"},
+  {id:"HID-PROX",tech:"PROX",name:"HID-compatible 125 kHz Prox / Prox II",form:"Card or fob",sold:false,aliases:["PROX","PROX2","PROXII","HIDPROX","HID","PROXCARD"],note:"Rosslare does not sell these. The guide lists them as 'PROX, PROX 2'."},
+  {id:"AT-C1S-000-E000",tech:"CSN",name:"Mifare ID card",form:"ID card",aliases:["AT-C1S"]},
+  {id:"AT-C1K-000-0SB0",tech:"CSN",name:"Mifare shark-tooth fob",form:"Key fob",aliases:["AT-C1K"]},
+  {id:"AT-D1S-000-0000",tech:"CSN",name:"Mifare ISO card (D1)",form:"ISO card",aliases:["AT-D1S","AT-D1X-000-XXXX","AT-D1X","AT-D1S-000-0001"],note:"Listed as 'alt' for several readers. On the X6255/X6355 readers it's listed for configuration cards. The 2025 catalog and the Rosslare website list it as AT-D1S-000-0001."},
+  {id:"AT-D1K-000-0SB0",tech:"CSN",name:"Mifare shark-tooth fob (D1)",form:"Key fob",aliases:["AT-D1K"]},
+  {id:"RT-C1S-26A-3000",tech:"O2S_C1",name:"O2S ISO card (C1)",form:"ISO card",aliases:["RT-C1S"]},
+  {id:"RT-C1K-26A-7SB0",tech:"O2S_C1",name:"O2S key fob (C1)",form:"Key fob",aliases:["RT-C1K"]},
+  {id:"RT-V2S-26A-3000",tech:"O2S_V2",name:"O2S ISO card (V2)",form:"ISO card",aliases:["RT-V2S"]},
+  {id:"RT-V2K-26A-7SB0",tech:"O2S_V2",name:"O2S key fob (V2)",form:"Key fob",aliases:["RT-V2K"]},
+  {id:"LT-UVG-26A-3001",tech:"UHF",name:"UHF tag (WIDE)",form:"Tag",aliases:["LT-UVG"]},
+  {id:"LT-UVH-26A-7000",tech:"UHF",name:"UHF tag (HARD)",form:"Tag",aliases:["LT-UVH"]},
+  {id:"LT-UVS-26A-3000",tech:"UHF",name:"UHF ISO card",form:"ISO card",aliases:["LT-UVS","LT-UVS-3000"],note:"The guide lists this as LT-UVS-3000. The 2025 product catalog lists it as LT-UVS-26A-3000."},
+  {id:"LT-UVT-26A-3001",tech:"UHF",name:"UHF tag (TR)",form:"Tag",aliases:["LT-UVT"]},
+  {id:"SA-23-B2",tech:"REMOTE",name:"2-button remote",form:"Remote",aliases:["SA-23G-B2","SA-23-B2G"],note:"The guide uses SA-23-B2G and SA-23G-B2. The 2025 catalog and AY-L23 datasheet use SA-23-B2."},
+  {id:"SA-23-B4",tech:"REMOTE",name:"4-button remote",form:"Remote",aliases:["SA-23G-B4","SA-23-B4G"],note:"The guide uses SA-23-B4G and SA-23G-B4. The 2025 catalog and AY-L23 datasheet use SA-23-B4."},
+  {id:"RT-C4S-26A-3000",tech:"O2S_C1",name:"O2S ISO card, 4K (C1)",form:"ISO card",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"RT-C1S-38A-3000",tech:"O2S_C1",name:"O2S ISO card, 38-bit (C1)",form:"ISO card",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide. 38-bit Wiegand: confirm the panel/software is set up for 38-bit."},
+  {id:"RT-C4S-38A-3000",tech:"O2S_C1",name:"O2S ISO card, 4K, 38-bit (C1)",form:"ISO card",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide. 38-bit Wiegand: confirm the panel/software is set up for 38-bit."},
+  {id:"RT-C1K-38A-7SB0",tech:"O2S_C1",name:"O2S shark fob, 38-bit (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide. 38-bit Wiegand: confirm the panel/software is set up for 38-bit."},
+  {id:"RT-C1K-26A-7RB0",tech:"O2S_C1",name:"O2S ring fob (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"RT-C1K-38A-7RB0",tech:"O2S_C1",name:"O2S ring fob, 38-bit (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide. 38-bit Wiegand: confirm the panel/software is set up for 38-bit."},
+  {id:"RT-C1K-26A-7TB0",tech:"O2S_C1",name:"O2S twist fob (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"RT-C1K-38A-7TB0",tech:"O2S_C1",name:"O2S twist fob, 38-bit (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide. 38-bit Wiegand: confirm the panel/software is set up for 38-bit."},
+  {id:"RT-C4K-26A-7SB0",tech:"O2S_C1",name:"O2S shark fob, 4K (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"RT-C4K-38A-7SB0",tech:"O2S_C1",name:"O2S shark fob, 4K, 38-bit (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide. 38-bit Wiegand: confirm the panel/software is set up for 38-bit."},
+  {id:"RT-C4K-26A-7RB0",tech:"O2S_C1",name:"O2S ring fob, 4K (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"RT-C4K-38A-7RB0",tech:"O2S_C1",name:"O2S ring fob, 4K, 38-bit (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide. 38-bit Wiegand: confirm the panel/software is set up for 38-bit."},
+  {id:"RT-C4K-26A-7TB0",tech:"O2S_C1",name:"O2S twist fob, 4K (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"RT-C4K-38A-7TB0",tech:"O2S_C1",name:"O2S twist fob, 4K, 38-bit (C1)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide. 38-bit Wiegand: confirm the panel/software is set up for 38-bit."},
+  {id:"AT-C1S-000-0000",tech:"CSN",name:"Mifare ISO card (not programmed)",form:"ISO card",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"AT-C4S-000-0000",tech:"CSN",name:"Mifare ISO card, 4K (not programmed)",form:"ISO card",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"AT-D4S-000-0001",tech:"CSN",name:"Mifare ISO card, 4K, 4-byte UID (not programmed)",form:"ISO card",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"AT-C1K-000-0RB0",tech:"CSN",name:"Mifare ring fob (not programmed)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"AT-C1K-000-0TB0",tech:"CSN",name:"Mifare twist fob (not programmed)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"AT-C4K-000-0SB0",tech:"CSN",name:"Mifare shark fob, 4K (not programmed)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"AT-C4K-000-0RB0",tech:"CSN",name:"Mifare ring fob, 4K (not programmed)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"AT-C4K-000-0TB0",tech:"CSN",name:"Mifare twist fob, 4K (not programmed)",form:"Key fob",web:true,note:"Added from rosslaresecurity.com (MIFARE Classic EV1 Credentials datasheet, 2022). Not in Larry's guide."},
+  {id:"BLE",tech:"BLE",name:"Mobile credential (Bluetooth)",form:"Phone",pseudo:true,aliases:["BLUETOOTH","MOBILE","MOBILECREDENTIAL"]},
+  {id:"NFC",tech:"NFC",name:"Phone NFC",form:"Phone",pseudo:true},
+  {id:"PIN",tech:"PIN",name:"PIN code (keypad)",form:"Keypad entry",pseudo:true,aliases:["KEYPAD","PINCODE"]}
+];
+
+const T_EM={temp:"-31°C to 63°C (-25°F to 145°F)",volt:"5–16 VDC",ip:"IP65"};
+const T_X6={temp:"-35°C to 66°C (-31°F to 150°F)",volt:"8–16 VDC",range:'2.0"',ul:"N",ip:"IP65",out:"W,O"};
+const T_AYC={temp:"-30°C to 65°C (-22°F to 150°F)",volt:"5–15 VDC",ul:"Y",ip:"IP65",out:"W",convertible:true};
+const T_O2S={temp:"-31°C to 63°C (-24°F to 145°F)",range:'1.5"',ul:"N",out:"W,O"};
+
+const READERS = [
+  // 125 kHz EM
+  {id:"AY-K12C",fam:"AY-X12C",style:"Micromullion",techs:["EM"],creds:EM,...T_EM,range:'3.2"',ul:"Y",out:"W,S,C",note:"X12C series can be set to RS-232 or Clock & Data output (see manual)."},
+  {id:"AY-H12C",fam:"AY-X12C",style:"Single gang",techs:["EM"],creds:EM,...T_EM,range:'4.0"',ul:"Y",out:"W,S,C",note:"X12C series can be set to RS-232 or Clock & Data output (see manual)."},
+  {id:"AY-L12C",fam:"AY-X12C",style:"Full mullion",techs:["EM"],creds:EM,...T_EM,range:'4.0"',ul:"Y",out:"W,S,C",note:"X12C series can be set to RS-232 or Clock & Data output (see manual)."},
+  {id:"AY-Q12C",fam:"AY-X12C",style:"Single gang SS antivandal",techs:["EM"],creds:EM,...T_EM,range:'1.6"',ul:"Y",out:"W,S,C",note:"X12C series can be set to RS-232 or Clock & Data output (see manual)."},
+  {id:"AY-X14",style:"Micromullion",techs:["EM"],creds:EM,...T_EM,out:"C",status:"disc",repl:"AY-K12C",note:"Discontinued. Replaced by AY-X12C. Not on the Credentials tab; EM per the Readers tab."},
+  {id:"AY-X20",style:"Micromullion",techs:["EM"],creds:EM,...T_EM,out:"S",status:"disc",repl:"AY-K12C",note:"Discontinued. Replaced by AY-X12C.",aliases:["AY-X20X"]},
+  {id:"AY-X25",style:"Micromullion",techs:["CSN"],creds:[...CSN_C,...CSN_D],...T_EM,out:"W",status:"disc",repl:"AY-K6255",note:"Discontinued. Replaced by AY-X6255."},
+  // Remote
+  {id:"AY-L23",style:"Full mullion",techs:["REMOTE"],creds:["SA-23-B2","SA-23-B4"],temp:T_EM.temp,volt:"7–24 VDC",range:"210'",ul:"N",ip:"IP65",out:"W",note:"Long-range receiver for SA-23 remotes."},
+  // Multi
+  {id:"AY-K35",style:"Mullion",techs:["EM","PROX","CSN","BLE","NFC"],creds:[...EM,"HID-PROX",...CSN_C,...CSN_D,"BLE","NFC"],temp:"-35°C to 66°C (-31°F to 150°F)",volt:"8–16 VDC",range:"BLE 40', 125 kHz 3.2\", Mifare 2.0\"",ul:"N",ip:"IP68",out:"W,O",note:"Multi-technology reader."},
+  // Keypads / convertible
+  {id:"AYC-F54",fam:"AYC-X54",style:"Single gang",keypad:true,techs:["PIN"],creds:["PIN"],...T_AYC,range:"N/A"},
+  {id:"AYC-G54",fam:"AYC-X54",style:"Full mullion",keypad:true,techs:["PIN"],creds:["PIN"],...T_AYC,range:"N/A"},
+  {id:"AYC-Q54",fam:"AYC-X54",style:"Single gang SS antivandal",keypad:true,techs:["PIN"],creds:["PIN"],...T_AYC,range:"N/A"},
+  {id:"AYC-F60",fam:"AYC-X60",style:"Single gang",keypad:true,techs:["PIN","EM","PROX"],creds:["PIN",...EM,"HID-PROX"],...T_AYC,range:'2.4"'},
+  {id:"AYC-G60",fam:"AYC-X60",style:"Full mullion",keypad:true,techs:["PIN","EM","PROX"],creds:["PIN",...EM,"HID-PROX"],...T_AYC,range:'2.4"'},
+  {id:"AYC-Q60",fam:"AYC-X60",style:"Single gang SS antivandal",keypad:true,techs:["PIN","EM","PROX"],creds:["PIN",...EM,"HID-PROX"],...T_AYC,range:'2.4"'},
+  {id:"AYC-F64",fam:"AYC-X64",style:"Single gang",keypad:true,techs:["PIN","EM"],creds:["PIN",...EM],...T_AYC,range:'2.4"',status:"legacy",repl:"AYC-F60",note:"OK if the customer asks for it. Use the X60 series for new installs."},
+  {id:"AYC-G64",fam:"AYC-X64",style:"Full mullion",keypad:true,techs:["PIN","EM"],creds:["PIN",...EM],...T_AYC,range:'2.4"',status:"legacy",repl:"AYC-G60",note:"OK if the customer asks for it. Use the X60 series for new installs."},
+  {id:"AYC-Q64",fam:"AYC-X64",style:"Single gang SS antivandal",keypad:true,techs:["PIN","EM"],creds:["PIN",...EM],...T_AYC,range:'2.4"',status:"legacy",repl:"AYC-Q60",note:"OK if the customer asks for it. Use the X60 series for new installs."},
+  // Mifare CSN
+  {id:"AY-H6255",fam:"AY-X6255",style:"Single gang",techs:["CSN","NFC"],creds:[...CSN_C,"AT-D1S-000-0000","NFC"],...T_X6,cfg:true},
+  {id:"AY-K6255",fam:"AY-X6255",style:"Micromullion",techs:["CSN","NFC"],creds:[...CSN_C,"AT-D1S-000-0000","NFC"],...T_X6,cfg:true},
+  {id:"AY-L6255",fam:"AY-X6255",style:"Full mullion",techs:["CSN","NFC"],creds:[...CSN_C,"AT-D1S-000-0000","NFC"],...T_X6,cfg:true},
+  {id:"AY-Q6255",fam:"AY-X6255",style:"Single gang SS antivandal",techs:["CSN","NFC"],creds:[...CSN_C,"AT-D1S-000-0000","NFC"],...T_X6,cfg:true},
+  {id:"AY-H6355",fam:"AY-X6355",style:"Single gang",keypad:true,techs:["PIN","CSN","NFC"],creds:["PIN",...CSN_C,"AT-D1S-000-0000","NFC"],...T_X6,cfg:true,convertible:true,aliases:["AYC-H6355"]},
+  {id:"AY-Q6355",fam:"AY-X6355",style:"Single gang SS antivandal",keypad:true,techs:["PIN","CSN","NFC"],creds:["PIN",...CSN_C,"AT-D1S-000-0000","NFC"],...T_X6,cfg:true,convertible:true,aliases:["AYC-Q6355"]},
+  {id:"AY-H6255BT",style:"Single gang",techs:["CSN","BLE","NFC"],creds:[...CSN_C,...CSN_D,"BLE","NFC"],...T_X6,ip:"IP68"},
+  {id:"AY-H6355BT",style:"Single gang",keypad:true,techs:["PIN","CSN","BLE","NFC"],creds:["PIN",...CSN_C,...CSN_D,"BLE","NFC"],...T_X6,ip:"IP68"},
+  // UHF
+  {id:"AY-U915BT",style:'Panel 11.6" × 11.6"',techs:["UHF","BLE"],creds:[...UHF,"BLE"],temp:"-35°C to 60°C (-31°F to 140°F)",volt:"9–15 VDC (2 A)",range:"19'",ul:"N",ip:"IP67",out:"W,O"},
+  {id:"AY-U920BT",style:'Panel 14.4" × 14.4"',techs:["UHF","BLE"],creds:[...UHF,"BLE"],temp:"-35°C to 60°C (-31°F to 140°F)",volt:"10–15 VDC (2 A)",range:"39'",ul:"N",ip:"IP67",out:"W,O"},
+  // O2S
+  {id:"AY-G6270B+P00",fam:"AY-X6270",style:"Full mullion",techs:["O2S_C1"],creds:O2S_C1,...T_O2S,volt:"6–16 VDC",ip:"IP68"},
+  {id:"AY-H6270B+P00",fam:"AY-X6270",style:"Single gang",techs:["O2S_C1"],creds:O2S_C1,...T_O2S,volt:"6–16 VDC",ip:"IP68"},
+  {id:"AY-G6370B+P00",fam:"AY-X6370",style:"Full mullion",keypad:true,techs:["PIN","O2S_C1"],creds:["PIN",...O2S_C1],...T_O2S,volt:"7–16 VDC",ip:"IP65"},
+  {id:"AY-H6370B+P00",fam:"AY-X6370",style:"Single gang",keypad:true,techs:["PIN","O2S_C1"],creds:["PIN",...O2S_C1],...T_O2S,volt:"7–16 VDC",ip:"IP65"},
+  {id:"AY-G6280B+P00",fam:"AY-X6280",style:"Full mullion",techs:["O2S_V2"],creds:O2S_V2,...T_O2S,volt:"8–16 VDC",ip:"IP68"},
+  {id:"AY-H6280B+P00",fam:"AY-X6280",style:"Single gang",techs:["O2S_V2"],creds:O2S_V2,...T_O2S,volt:"8–16 VDC",ip:"IP68"},
+  {id:"AY-G6380B+P00",fam:"AY-X6380",style:"Full mullion",keypad:true,techs:["PIN","O2S_V2"],creds:["PIN",...O2S_V2],...T_O2S,volt:"9–16 VDC",ip:"IP65"},
+  {id:"AY-H6380B+P00",fam:"AY-X6380",style:"Single gang",keypad:true,techs:["PIN","O2S_V2"],creds:["PIN",...O2S_V2],...T_O2S,volt:"9–16 VDC",ip:"IP65"},
+  // Biometric
+  {id:"AY-B8520",style:"Custom indoor",techs:["EM","BIO"],creds:EM,status:"disc"},
+  {id:"AY-B8550",style:"Custom indoor",techs:["CSN","BIO"],creds:CSN_D,status:"disc"},
+  {id:"AY-B8620",style:"Full mullion outdoor",techs:["EM","BIO"],creds:EM,status:"disc"},
+  {id:"AY-B8650",style:"Full mullion outdoor",techs:["CSN","BIO"],creds:CSN_D,status:"disc"},
+  {id:"AY-B9120BT",style:"Custom indoor",techs:["EM","BLE","BIO"],creds:[...EM,"BLE"]},
+  {id:"AY-B9150BT",style:"Custom indoor",techs:["CSN","BLE","BIO"],creds:[...CSN_D,"BLE"]},
+  {id:"AY-B9250BT",style:"Custom indoor",techs:["CSN","BLE","BIO"],creds:[...CSN_D,"BLE"],note:"The guide's Readers tab says EM + Mifare. The AY-B9250BT datasheet (V02, Aug 2025) lists a 13.56 MHz MIFARE reader and BLE only, with no 125 kHz EM, which matches the Credentials tab."},
+  {id:"AY-B9350",style:"Custom indoor",keypad:true,techs:["PIN","EM","CSN","BIO","REMOTE"],creds:["PIN",...EM,...CSN_C,...CSN_D],note:"The guide shows fingerprint, facial and remote-fob support too."},
+  // Desktop enrollment
+  {id:"DR-12C",style:"Desktop enrollment",desktop:true,techs:["EM","PROX"],creds:[...EM,"HID-PROX"]},
+  {id:"DR-6255",style:"Desktop enrollment",desktop:true,techs:["CSN"],creds:[...CSN_C,...CSN_D]},
+  {id:"DR-6280",style:"Desktop enrollment",desktop:true,techs:["O2S_C1","O2S_V2"],creds:[...O2S_C1,...O2S_V2],note:"The 2025 catalog lists support for MIFARE Classic EV1 and DESFire EV1, which covers both O2S generations."},
+  {id:"DR-U955BT",style:"Desktop enrollment",desktop:true,techs:["UHF","CSN","BLE"],creds:[...UHF,"BLE"],aliases:["DR-U922BT"],note:"The guide's Readers tab says DR-U922BT. The Credentials tab and the 2025 product catalog both say DR-U955BT."}
+];
+READERS.forEach(r=>{r.kind="reader"; r.status=r.status||"current";});
+
+const STANDALONE = [
+  {id:"AC-Q41HB",techs:["PIN"],creds:["PIN"],style:"Single gang SS antivandal",desc:"Single gang box, stainless antivandal, water resistant",heater:"Y",ip:"IP54",temp:"-20°C to 60°C (-4°F to 140°F)",volt:"12–24 VDC / 12–24 VAC",status:"legacy",repl:"AC-Q41SB",note:"Legacy. Use AC-Q41SB."},
+  {id:"AC-Q41SB",techs:["PIN"],creds:["PIN"],style:"Single gang SS antivandal",desc:"Single gang box, stainless antivandal, water resistant",heater:"Y",ip:"IP65",temp:"-20°C to 60°C (-4°F to 140°F)",volt:"12–24 VDC / 16–24 VAC"},
+  {id:"AC-F43",techs:["PIN"],creds:["PIN"],style:"Single gang",desc:"Single gang, black plastic, epoxy potted",heater:"N",ip:"IP65",temp:"-30°C to 65°C (-22°F to 150°F)",volt:"12–24 VDC / 16–24 VAC"},
+  {id:"AC-G43",techs:["PIN"],creds:["PIN"],style:"Mullion",desc:"Mullion, black plastic, epoxy potted",heater:"N",ip:"IP65",temp:"-30°C to 65°C (-22°F to 150°F)",volt:"12–24 VDC / 16–24 VAC"},
+  {id:"AC-Q42HB",techs:["PIN","EM"],creds:["PIN",...EM],style:"Single gang SS antivandal",desc:"Single gang box, stainless antivandal, water resistant",heater:"Y",ip:"IP54",temp:"-20°C to 60°C (-4°F to 140°F)",volt:"12–24 VDC / 16–24 VAC",status:"legacy",repl:"AC-Q42SB",note:"Legacy. Use AC-Q42SB."},
+  {id:"AC-Q42SB",techs:["PIN","EM"],creds:["PIN",...EM],style:"Single gang SS antivandal",desc:"Single gang box, stainless antivandal, epoxy potted",heater:"Y",ip:"IP65",temp:"-20°C to 60°C (-4°F to 140°F)",volt:"12–24 VDC / 12–24 VAC"},
+  {id:"AC-F44",techs:["PIN","EM"],creds:["PIN",...EM],style:"Single gang",desc:"Single gang, black plastic, epoxy potted",heater:"N",ip:"IP65",temp:"-30°C to 65°C (-22°F to 150°F)",volt:"12–24 VDC / 16–24 VAC"},
+  {id:"AC-G44",techs:["PIN","EM"],creds:["PIN",...EM],style:"Mullion",desc:"Mullion, black plastic, epoxy potted",heater:"N",ip:"IP65",temp:"-30°C to 65°C (-22°F to 150°F)",volt:"12–24 VDC / 16–24 VAC"}
+];
+STANDALONE.forEach(s=>{s.kind="standalone"; s.keypad=true; s.status=s.status||"current"; s.ul="N";});
+
+const C_AC="90–265 VAC, 50–60 Hz", C_DC="12–16 VDC @ 1.5 A", TMP="0°C to 49°C (32°F to 120°F)";
+const CTRLS = [
+  {id:"AC-215IPBU",desc:"2-door controller with power supply and enclosure, Ethernet",doors:"2",readers:"2",conn:"ETH, RS-485",pwr:C_AC,lock:"2 A at 13.8 VDC",exp:"None",auxR:"2",auxI:"2",ul:"Y",batt:"12 V 7 Ah",line:"B"},
+  {id:"AC-215IP-DIN",desc:"2-door control module only, wall or DIN rail mount, Ethernet",doors:"2",readers:"2",conn:"ETH, RS-485",pwr:C_DC,lock:"N/A",exp:"None",auxR:"2",auxI:"2",ul:"Y",batt:"N/A",line:"B"},
+  {id:"AC-225BU",desc:"2 or 4-door controller with power supply and enclosure",doors:"2/4",readers:"2/4",conn:"RS-485",pwr:C_AC,lock:"2 A at 13.8 VDC",exp:"MD-D02B",auxR:"2/4",auxI:"2/4",ul:"Y",batt:"12 V 7 Ah",line:"B"},
+  {id:"AC-225IPBU",desc:"2 or 4-door controller with power supply and enclosure, Ethernet",doors:"2/4",readers:"2/4",conn:"ETH, RS-485",pwr:C_AC,lock:"2 A at 13.8 VDC",exp:"MD-D02B",auxR:"2/4",auxI:"2/4",ul:"Y",batt:"12 V 7 Ah",line:"B"},
+  {id:"AC-225IP-DIN",desc:"2 or 4-door control module only, wall or DIN rail mount, Ethernet",doors:"2/4",readers:"2/4",conn:"ETH, RS-485",pwr:C_DC,lock:"N/A",exp:"MD-D02B",auxR:"2/4",auxI:"2/4",ul:"Y",batt:"N/A",line:"B"},
+  {id:"AC-425BU",desc:"4 or 8-door controller with power supply and enclosure",doors:"4/8",readers:"4/8",conn:"RS-485",pwr:C_AC,lock:"2 A at 13.8 VDC",exp:"MD-D04B",auxR:"0",auxI:"0",ul:"Y",batt:"12 V 7 Ah",line:"B",note:"The AC-825IP is preferred: it has 2 inputs per door vs. 1 on the AC-425B. The AC-425B is OK for remote sites using port forwarding without a VPN."},
+  {id:"AC-425IPBU",desc:"4 or 8-door controller with power supply and enclosure, Ethernet",doors:"4/8",readers:"4/8",conn:"ETH, RS-485",pwr:C_AC,lock:"2 A at 13.8 VDC",exp:"MD-D04B",auxR:"0",auxI:"0",ul:"Y",batt:"12 V 7 Ah",line:"B",note:"The AC-825IP is preferred: it has 2 inputs per door vs. 1 on the AC-425B. The AC-425B is OK for remote sites using port forwarding without a VPN."},
+  {id:"AC-425IP-DIN",desc:"4 or 8-door control module only, wall or DIN rail mount, Ethernet",doors:"4/8",readers:"4/8",conn:"ETH, RS-485",pwr:C_DC,lock:"N/A",exp:"MD-D04B",auxR:"0",auxI:"0",ul:"Y",batt:"N/A",line:"B"},
+  {id:"AC-825IP-U",desc:"4 or 8-door controller with power supply and enclosure, Ethernet",doors:"4/8",readers:"4/8",conn:"ETH",pwr:C_AC,lock:"2 A at 13.8 VDC",exp:"D-805 / R-805 / S-805 / P-805",auxR:"2",auxI:"4",ul:"Y",batt:"12 V 7 Ah",temp:"-5°C to 50°C (23°F to 122°F)",line:"825",osdp:true,aliases:["AC-825IP","AC-825","AC825IPU"],note:"Door and reader counts are for the main board's Wiegand ports. 2 more readers can be added over OSDP (outputs 5 and 6)."},
+  {id:"AC-825IP-PCBA",desc:"4 or 8-door control module only, wall or DIN rail mount, Ethernet",doors:"4/8",readers:"4/8",conn:"ETH",pwr:C_DC,lock:"N/A",exp:"D-805 / R-805 / S-805 / P-805",auxR:"2",auxI:"4",ul:"Y",batt:"N/A",temp:"-5°C to 50°C (23°F to 122°F)",line:"825",osdp:true,note:"Door and reader counts are for the main board's Wiegand ports. 2 more readers can be added over OSDP (outputs 5 and 6)."},
+  // legacy boards still available for repair
+  {id:"AC-215-PCBA",desc:"2-door controller board only (legacy, repair)",doors:"2",readers:"2",conn:"RS-232/485",pwr:"12–16 VDC",lock:"N/A",exp:"None",auxR:"2",auxI:"2",ul:"N",batt:"N/A",line:"L",status:"legacy"},
+  {id:"AC-215IP-PCBA",desc:"2-door control module only, Ethernet (legacy, repair)",doors:"2",readers:"2",conn:"ETH, RS-232/485",pwr:"12–16 VDC",lock:"N/A",exp:"None",auxR:"2",auxI:"2",ul:"Y",batt:"N/A",line:"L",status:"legacy"},
+  {id:"AC-225IP-PCBA",desc:"2 or 4-door control module only, Ethernet (legacy, repair)",doors:"2/4",readers:"2/4",conn:"ETH, RS-232/485",pwr:"12–16 VDC",lock:"N/A",exp:"MD-D02",auxR:"2/4",auxI:"2/4",ul:"Y",batt:"N/A",line:"L",status:"legacy"},
+  {id:"AC-425IP-PCBA",desc:"4 or 8-door controller only, Ethernet (legacy, repair)",doors:"4/8",readers:"4/8",conn:"ETH, RS-232/485",pwr:"12–16 VDC",lock:"N/A",exp:"MD-D04",auxR:"2/4",auxI:"2/4",ul:"N",batt:"N/A",line:"L",status:"legacy"},
+  // legacy complete assemblies (not available)
+  {id:"AC-215",desc:"2-door controller with power supply and enclosure",doors:"2",readers:"2",conn:"RS-232/485",pwr:"16.5 VAC",lock:"1.5 A",exp:"None",auxR:"2",auxI:"2",ul:"N",batt:"12 V 7 Ah",line:"L",status:"disc"},
+  {id:"AC-215IP",desc:"2-door controller with power supply and enclosure, Ethernet",doors:"2",readers:"2",conn:"ETH, RS-232/485",pwr:"16.5 VAC",lock:"1.5 A",exp:"None",auxR:"2",auxI:"2",ul:"N",batt:"12 V 7 Ah",line:"L",status:"disc"},
+  {id:"AC-225",desc:"2 or 4-door controller with power supply and enclosure",doors:"2/4",readers:"2/4",conn:"RS-232/485",pwr:"16.5 VAC",lock:"1.5 A",exp:"MD-D02",auxR:"2/4",auxI:"2/4",ul:"Y",batt:"12 V 7 Ah",line:"L",status:"disc"},
+  {id:"AC-225-PCBA",desc:"2 or 4-door controller board only",doors:"2/4",readers:"2/4",conn:"RS-232/485",pwr:"12–16 VDC",lock:"N/A",exp:"MD-D02",auxR:"2/4",auxI:"2/4",ul:"Y",batt:"N/A",line:"L",status:"disc"},
+  {id:"AC-225IP",desc:"2 or 4-door controller with power supply and enclosure, Ethernet",doors:"2/4",readers:"2/4",conn:"ETH, RS-232/485",pwr:"16.5 VAC",lock:"1.5 A",exp:"MD-D02",auxR:"2/4",auxI:"2/4",ul:"Y",batt:"12 V 7 Ah",line:"L",status:"disc"},
+  {id:"AC-425",desc:"4 or 8-door controller with power supply and enclosure",doors:"4/8",readers:"4/8",conn:"RS-232/485",pwr:"16.5 VAC",lock:"1.5 A",exp:"MD-D04",auxR:"0",auxI:"0",ul:"N",batt:"12 V 7 Ah",line:"L",status:"disc"},
+  {id:"AC-425-PCBA",desc:"4 or 8-door controller board only",doors:"4/8",readers:"4/8",conn:"RS-232/485",pwr:"12–16 VDC",lock:"N/A",exp:"MD-D04",auxR:"0",auxI:"0",ul:"N",batt:"N/A",line:"L",status:"disc"},
+  {id:"AC-425IP",desc:"4 or 8-door controller with power supply and enclosure, Ethernet",doors:"4/8",readers:"4/8",conn:"ETH, RS-232/485",pwr:"16.5 VAC",lock:"1.5 A",exp:"MD-D04",auxR:"0",auxI:"0",ul:"N",batt:"12 V 7 Ah",line:"L",status:"disc"}
+];
+CTRLS.forEach(c=>{c.kind="controller"; c.status=c.status||"current"; c.temp=c.temp||TMP; c.relays="5 A at 30 VDC";});
+
+const EXPS = [
+  {id:"MD-D02B",desc:"Door expansion for B-series AC-225 panels",fits:["AC-225BU","AC-225IPBU","AC-225IP-DIN"]},
+  {id:"MD-D04B",desc:"Door expansion for B-series AC-425 panels",fits:["AC-425BU","AC-425IPBU","AC-425IP-DIN"]},
+  {id:"MD-D02",desc:"Door expansion for legacy AC-225 panels",fits:["AC-225","AC-225-PCBA","AC-225IP","AC-225IP-PCBA"],status:"legacy"},
+  {id:"MD-D04",desc:"Door expansion for legacy AC-425 panels",fits:["AC-425","AC-425-PCBA","AC-425IP","AC-425IP-PCBA"],status:"legacy"},
+  {id:"D-805",desc:"4 doors and readers. Up to 10 boards over OSDP, max 48 doors. That makes one AC-825 a single point of failure, so split across 2 AC-825s.",fits:["AC-825IP-U","AC-825IP-PCBA"]},
+  {id:"R-805",desc:"16 form C relay outputs, usually elevator control (one relay per floor). Rated 5 A DC, 150 W max.",fits:["AC-825IP-U","AC-825IP-PCBA"]},
+  {id:"S-805",desc:"16 supervised inputs for monitoring uncontrolled doors, windows, etc.",fits:["AC-825IP-U","AC-825IP-PCBA"]},
+  {id:"P-805",desc:"8 form C relay outputs and 16 supervised inputs",fits:["AC-825IP-U","AC-825IP-PCBA"]},
+  {id:"ME-1515",desc:"Expansion chassis. Holds two X-805 boards with a power supply for boards and locks.",fits:["AC-825IP-U","AC-825IP-PCBA"]},
+  {id:"PS-C25TBU",desc:"Secure power supply for running AYC convertible readers standalone. 100–240 VAC input, 14 VDC at 2 A for lock power.",acc:"convertible",aliases:["PS-C25T"]},
+  {id:"MD-25T",desc:"2-relay module for running AYC convertible readers standalone, embedded use. Needs a 12–15 VDC supply.",acc:"convertible"}
+];
+EXPS.forEach(e=>{e.kind="expansion"; e.status=e.status||"current";});
+
+const REXS = [
+  {id:"EX-06",type:"Piezo",desc:"Single gang, stainless, lighted round button with timer",style:"Single gang",volt:"10–24 VDC",output:"Relay 1 NO + 1 NC, 30 V at 2 A",term:"Terminal blocks",ul:"Y",ip:"IP65"},
+  {id:"EX-16",type:"Piezo",desc:"Mullion, stainless, lighted round button with timer",style:"Mullion",volt:"10–24 VDC",output:"Relay 1 NO + 1 NC, 30 V at 2 A",term:"Terminal blocks",ul:"Y",ip:"IP65"},
+  {id:"EX-07",type:"Piezo",desc:"Single gang, stainless, lighted square button with timer",style:"Single gang",volt:"10–24 VDC/VAC",output:"Relay 1 NO + 1 NC, 30 V at 2 A",term:"Pigtail",ul:"Y",ip:"IP65"},
+  {id:"EX-17",type:"Piezo",desc:"Mullion, stainless, lighted square button with timer",style:"Mullion",volt:"10–24 VDC/VAC",output:"Relay 1 NO + 1 NC, 30 V at 2 A",term:"Pigtail",ul:"Y",ip:"IP65"},
+  {id:"EX-H04",type:"Piezo",desc:"Single gang touch switch",style:"Single gang",volt:"8–30 VDC",output:"Open collector to GND, 30 V max 1 A",term:"Pigtail",ul:"N",ip:"NA"},
+  {id:"EX-H22",type:"Touchless",desc:"Single gang touchless motion switch",style:"Single gang",volt:"8–30 VDC",output:"Open collector to GND, 30 V max 1 A",term:"Pigtail",ul:"N",ip:"NA"}
+];
+REXS.forEach(x=>{x.kind="rex"; x.status="current"; x.note="Add suffix EO (EXIT printed below button) or OO (no printing).";});
+CREDS.forEach(c=>{c.kind="cred"; c.status="current";});
+
+const ALL = [...READERS,...STANDALONE,...CREDS,...CTRLS,...EXPS,...REXS];
+const BY = Object.fromEntries(ALL.map(p=>[p.id,p]));
+
+/* ---------- alias index ---------- */
+const norm = s => String(s).toUpperCase().replace(/[^A-Z0-9]/g,"");
+const INDEX = new Map(); // normalized alias -> [ids]
+function addAlias(a,id){const k=norm(a); if(k.length<2) return; const l=INDEX.get(k)||[]; if(!l.includes(id)) l.push(id); INDEX.set(k,l);}
+ALL.forEach(p=>{
+  const aliases=[p.id,...(p.aliases||[])];
+  if(p.fam) aliases.push(p.fam);
+  if(p.kind==="reader"||p.kind==="standalone"){
+    const base=p.id.replace(/B\+P00$/,"");
+    aliases.push(base, base.replace(/B$/,""));
+    const short=base.replace(/^AYC?-/,""); aliases.push(short, short.replace(/B$/,""));
+    if(p.fam){ const f=p.fam.replace(/^AYC?-/,""); aliases.push(f, f.replace(/^X/,"")); }
+  }
+  if(p.kind==="controller"){ aliases.push(p.id.replace(/^AC-/,"")); }
+  aliases.forEach(a=>addAlias(a,p.id));
+});
+function resolve(token){
+  const k=norm(token); if(k.length<3) return null;
+  if(INDEX.has(k)) return INDEX.get(k)[0];
+  // longest alias that the token starts with (handles suffixes like -BLK)
+  let best=null,bl=0;
+  for(const [a,ids] of INDEX){ if(a.length>=6 && k.startsWith(a) && a.length>bl){best=ids[0];bl=a.length;} }
+  return best;
+}
+
+/* ============================================================
+   COMPATIBILITY LOGIC
+   ============================================================ */
+const isReaderish = p => p && (p.kind==="reader"||p.kind==="standalone");
+function outputOf(c){
+  if(c.tech==="CSN") return "csn";
+  if(c.tech==="PIN") return "pin";
+  if(c.tech==="BLE"||c.tech==="NFC") return "mobile";
+  if(c.tech==="PROX") return "fc";
+  if(/-26A-/.test(c.id)) return "fc";
+  return "unspecified";
+}
+const OUT_TXT = {
+  fc:{t:"Facility code + card number",ex:"FC 101 · Card 23457"},
+  csn:{t:"Card serial number (CSN)",ex:"CSN 04A31F2C"},
+  pin:{t:"PIN code",ex:"PIN ••••"},
+  mobile:{t:"Mobile credential",ex:"per mobile app setup"},
+  unspecified:{t:"Not specified in the guide",ex:"verify"}
+};
+function techName(t){return TECH[t]?TECH[t].label:t;}
+
+function evalPair(r,c,needFC){
+  const res={r,c,out:outputOf(c)};
+  const listed=r.creds.includes(c.id);
+  if(listed){
+    res.status="ok";
+    res.msg=`Listed as compatible in the guide.`;
+    if(r.cfg && c.id==="AT-D1S-000-0000"){res.status="verify"; res.msg="Listed for this reader as a configuration card, not a user credential. Use AT-C1S / AT-C1K for users.";}
+    if(res.status==="ok" && res.out==="csn" && needFC){
+      res.status="csn";
+      res.msg=`This pair reads, but the panel gets the card's serial number, not a facility code and card number. The guide lists Mifare parts with "-000-" in the part number under the CSN column. Printed card numbers won't match what the software sees.`;
+    } else if(res.status==="ok" && res.out==="csn"){
+      res.msg+=" The panel gets the card serial number (CSN), so enroll cards by presenting them or with a DR-6255.";
+    }
+    if(c.sold===false) res.msg+=" Note: Rosslare doesn't sell HID Prox credentials. The customer has to source them.";
+    return res;
+  }
+  if(r.techs.includes(c.tech)){
+    res.status="verify";
+    res.msg=`The reader supports ${techName(c.tech)}, but this part isn't listed for it in the guide. Confirm with tech support before quoting.`;
+    return res;
+  }
+  const rb=r.techs.map(t=>TECH[t].band), cb=TECH[c.tech].band;
+  if(c.tech.startsWith("O2S") && r.techs.includes("CSN")){
+    res.status="csn"; res.out="csn";
+    res.msg=`CSN problem: this is a Mifare CSN reader (the AY-x6255 datasheet: "read the CSN… and output the CSN in Wiegand or OSDP"). It reads the O2S card's chip serial number instead of the programmed facility code and card number. The card will "read," but the number won't match the card and won't line up with O2S enrollment.`;
+    return res;
+  }
+  if(c.tech==="CSN" && r.techs.some(t=>t.startsWith("O2S"))){
+    res.status=needFC?"csn":"verify"; res.out="csn";
+    res.msg="Not listed in the guide. The O2S reader datasheets (2022) say these readers \"read CSN of non-O2S credentials,\" so a plain Mifare card (AT-…-000-…) will read as its serial number, not a facility code + card number. For FC + card #, use the matching RT- O2S cards.";
+    return res;
+  }
+  if(c.tech.startsWith("O2S") && r.techs.some(t=>t.startsWith("O2S"))){
+    res.status=needFC?"csn":"verify"; res.out="csn";
+    res.msg=`Wrong O2S generation for this reader in the guide. This reader is listed with ${r.techs.includes("O2S_C1")?"C1 (RT-C1S / RT-C1K)":"V2 (RT-V2S / RT-V2K)"} cards; this card is ${c.tech==="O2S_C1"?"C1":"V2"}. The 6270/6370 readers use C1, the 6280/6380 use V2. Per the datasheets, O2S readers fall back to the CSN for credentials they don't decode, so expect a serial number at best. Match the generation.`;
+    return res;
+  }
+  if(cb==="125" && rb.includes("125")){
+    res.status="no"; res.msg=`Both are 125 kHz but use different modulation: ${techName(c.tech)} vs. ${r.techs.filter(t=>TECH[t].band==="125").map(techName).join(", ")}. The reader won't read this card.`;
+    return res;
+  }
+  if(c.pseudo){
+    res.status="no";
+    res.msg = c.tech==="PIN" ? "This reader has no keypad." : c.tech==="BLE" ? "This reader has no Bluetooth, so no mobile credential." : "This reader has no NFC support listed.";
+    return res;
+  }
+  res.status="no";
+  res.msg=`Different technology. The reader reads ${r.techs.filter(t=>t!=="BIO").map(techName).join(", ")}; this credential is ${techName(c.tech)}. It won't read at all.`;
+  return res;
+}
+
+function credsFor(r,needFC){
+  return r.creds.map(id=>BY[id]).filter(c=>c && !c.pseudo && !(r.cfg && c.id==="AT-D1S-000-0000") && (!needFC || outputOf(c)==="fc"));
+}
+function readersFor(c,styleHint){
+  let list=[...READERS,...STANDALONE].filter(r=>r.creds.includes(c.id) && r.status==="current" && !r.desktop && !(r.cfg && c.id==="AT-D1S-000-0000"));
+  if(styleHint){ list.sort((a,b)=>(b.style===styleHint)-(a.style===styleHint)); }
+  return list;
+}
+function fixesFor(res,needFC){
+  const {r,c,status}=res; const out=[];
+  if(status==="ok") return out;
+  const good=credsFor(r,needFC);
+  if(good.length) out.push({lbl:`Credentials that work with ${r.id}${needFC?" and send FC + card #":""}:`,ids:good.slice(0,6).map(x=>x.id)});
+  const rs=readersFor(c,r.style).filter(x=>x.id!==r.id);
+  if(!(needFC && outputOf(c)==="csn") && rs.length) out.push({lbl:`Readers listed for ${c.id}${r.style?` (same style first)`:""}:`,ids:rs.slice(0,6).map(x=>x.id)});
+  if(needFC && status==="csn" && c.tech==="CSN" && !r.techs.some(t=>t.startsWith("O2S"))){
+    const o2s=READERS.filter(x=>x.techs.some(t=>t.startsWith("O2S")) && !x.desktop && x.status==="current" && (!!x.keypad===!!r.keypad || true));
+    o2s.sort((a,b)=>(b.style===r.style)-(a.style===r.style) || (!!b.keypad===!!r.keypad)-(!!a.keypad===!!r.keypad));
+    const pick=o2s[0];
+    if(pick) out.push({lbl:`For FC + card # on 13.56 MHz, use an O2S reader with its matching RT- cards, e.g. ${pick.id}:`,ids:[pick.id,...pick.creds.filter(id=>!BY[id].pseudo)]});
+  }
+  return out;
+}
+
+function systemChecks(items,needFC){
+  const out=[];
+  const readers=items.filter(isReaderish), ctrls=items.filter(p=>p.kind==="controller"), exps=items.filter(p=>p.kind==="expansion"), creds=items.filter(p=>p.kind==="cred");
+  items.forEach(p=>{
+    if(p.status==="disc") out.push({status:"no",title:p.id,msg:`Discontinued / not available${p.kind==="controller"?" as a complete assembly (repair boards only where listed)":""}.${p.repl?` Replacement: ${p.repl}.`:""}`,ids:p.repl?[p.repl]:[]});
+    else if(p.status==="legacy") out.push({status:"verify",title:p.id,msg:(p.note||"Legacy product. Available for repair or if the customer asks for it.")+(p.repl?` Preferred: ${p.repl}.`:""),ids:p.repl?[p.repl]:[]});
+  });
+  readers.forEach(r=>{
+    if(r.desktop) out.push({status:"info",title:r.id,msg:"Desktop enrollment reader. It connects to the PC for enrolling cards and isn't a door reader."});
+    if(r.kind==="standalone" && ctrls.length) out.push({status:"info",title:r.id,msg:"This is a standalone unit with its own relay. It doesn't need a panel; check whether an AYC convertible or panel reader was intended."});
+    if(r.convertible && !ctrls.length && !items.some(p=>p.acc==="convertible")) out.push({status:"info",title:r.id,msg:"Convertible reader. For standalone use (no panel), add a PS-C25TBU power supply or an MD-25T relay module.",ids:["PS-C25TBU","MD-25T"]});
+    if(ctrls.length && !r.desktop && r.kind==="reader"){
+      if(r.out && !r.out.includes("W")) out.push({status:"verify",title:`${r.id} → panel`,msg:`Output is ${r.out==="C"?"Clock & Data":"RS-232 serial"} only, not Wiegand. The guide doesn't list that input on these panels.`});
+    }
+    if(r.note && r.kind==="reader" && !r.desktop && r.status==="current" && /Readers tab|Credentials tab|Confirm/.test(r.note)) out.push({status:"verify",title:r.id,msg:r.note});
+  });
+  if(ctrls.length && readers.some(r=>r.out&&r.out.includes("O"))){
+    const osdpCtrl=ctrls.some(c=>c.osdp);
+    const osdpRdrs=readers.filter(r=>r.out&&r.out.includes("O")).map(r=>r.id);
+    if(osdpCtrl) out.push({status:"info",title:"OSDP",msg:`${osdpRdrs.join(", ")} can be wired over OSDP on the AC-825IP (Wiegand also works). OSDP adds 2 reader ports per sizing configuration.`});
+  }
+  exps.forEach(e=>{
+    if(!e.fits) return;
+    if(!ctrls.length){ out.push({status:"info",title:e.id,msg:`Needs a host panel: ${e.fits.join(", ")}.`}); return; }
+    const ok=ctrls.filter(c=>e.fits.includes(c.id));
+    if(ok.length) out.push({status:"ok",title:`${e.id} + ${ok.map(c=>c.id).join(", ")}`,msg:"Expansion matches the panel."});
+    else {
+      const legacyMix=(e.id.endsWith("B")&&ctrls.some(c=>c.line==="L"))||(/^MD-D0\d$/.test(e.id)&&ctrls.some(c=>c.line==="B"));
+      out.push({status:"no",title:`${e.id} + ${ctrls.map(c=>c.id).join(", ")}`,msg:legacyMix?"B-series expansions don't work on legacy panels, and legacy expansions don't work on B-series panels.":`This expansion fits ${e.fits.join(", ")} only.`,ids:e.fits.slice(0,3)});
+    }
+  });
+  if(readers.length && !creds.length) {}
+  return out;
+}
+
+/* ============================================================
+   STATE + RENDER
+   ============================================================ */
+let basket=[]; let needFC=true;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const KIND_LABEL={reader:"Reader",standalone:"Standalone",cred:"Credential",controller:"Panel",expansion:"Expansion",rex:"REX"};
+function shortDesc(p){
+  if(p.kind==="reader") return `${p.style}${p.keypad?" · keypad":""} · ${p.techs.filter(t=>t!=="PIN").map(techName).join(", ")||"PIN only"}`;
+  if(p.kind==="standalone") return `Standalone · ${p.techs.map(techName).join(" + ")}`;
+  if(p.kind==="cred") return `${p.name} · ${techName(p.tech)}`;
+  return p.desc||"";
+}
+function add(id){ if(!BY[id]||basket.includes(id)) return; basket.push(id); render(); }
+function remove(id){ basket=basket.filter(x=>x!==id); render(); }
+
+function renderBasket(){
+  const el=$("#basket");
+  if(!basket.length){ el.innerHTML='<p class="empty">Nothing added yet. Add at least one reader and one credential to check a pairing.</p>'; return; }
+  const groups=[["Readers",p=>isReaderish(p)],["Credentials",p=>p.kind==="cred"],["Panels & expansion",p=>p.kind==="controller"||p.kind==="expansion"],["Other",p=>p.kind==="rex"]];
+  el.innerHTML=groups.map(([t,f])=>{
+    const ps=basket.map(id=>BY[id]).filter(f); if(!ps.length) return "";
+    return `<div class="basket-group"><h4>${t}</h4><div class="chips">${ps.map(p=>`<span class="chip"><button class="open" data-open="${esc(p.id)}" title="View details">${esc(p.id)}</button><button class="x" data-remove="${esc(p.id)}" aria-label="Remove ${esc(p.id)}">×</button></span>`).join("")}</div></div>`;
+  }).join("");
+}
+
+function pillFor(s){return {ok:'<span class="pill p-ok">Compatible</span>',verify:'<span class="pill p-verify">Verify</span>',csn:'<span class="pill p-csn">Reports CSN</span>',no:'<span class="pill p-no">Not compatible</span>',info:'<span class="pill p-info">Note</span>'}[s];}
+function addBtns(ids){return ids.map(id=>basket.includes(id)?`<span class="mono" style="font-size:12px;color:var(--muted)">${esc(id)} ✓</span>`:`<button class="add" data-add="${esc(id)}">+ ${esc(id)}</button>`).join("");}
+
+let lastPairs=[],lastSys=[];
+function renderResults(){
+  const items=basket.map(id=>BY[id]);
+  const readers=items.filter(isReaderish), creds=items.filter(p=>p.kind==="cred");
+  const pairs=[];
+  readers.forEach(r=>creds.forEach(c=>pairs.push(evalPair(r,c,needFC))));
+  const order={no:0,csn:1,verify:2,ok:3};
+  pairs.sort((a,b)=>order[a.status]-order[b.status]);
+  const sys=systemChecks(items,needFC).sort((a,b)=>({no:0,csn:1,verify:2,info:3,ok:4}[a.status]-{no:0,csn:1,verify:2,info:3,ok:4}[b.status]));
+  lastPairs=pairs; lastSys=sys;
+  const n=s=>pairs.filter(p=>p.status===s).length+sys.filter(p=>p.status===s).length;
+  let v;
+  if(!items.length) v={cls:"idle",sym:"?",h:"Add products to start",p:"Type a part number, pick from the lists, or paste a quote on the left."};
+  else if(!pairs.length && !sys.some(s=>s.status!=="info"&&s.status!=="ok")) v={cls:"idle",sym:"…",h:readers.length?"Add a credential to check this reader":creds.length?"Add a reader to check this credential":"No reader and card pairs to check",p:readers.length||creds.length?"Suggestions below show what the guide lists as compatible.":"Panel and expansion checks are shown below."};
+  else if(n("no")) v={cls:"no",sym:"✕",h:"Won't work as quoted",p:`${n("no")} incompatible item${n("no")>1?"s":""}. Fix before sending the quote.`};
+  else if(n("csn")) v={cls:"csn",sym:"!",h:"Cards will read as serial numbers (CSN)",p:"The panel won't get a facility code + card number. Change the reader or cards, or confirm the customer is OK enrolling by CSN."};
+  else if(n("verify")) v={cls:"verify",sym:"?",h:"Check with tech support before quoting",p:"Nothing is clearly wrong, but some items aren't confirmed in the guide."};
+  else v={cls:"ok",sym:"✓",h:"Compatible as quoted",p:`All ${pairs.length} reader and card pair${pairs.length===1?"":"s"} are listed in the guide${needFC?" and send a facility code + card number":""}.`};
+  const counts=items.length?[["no","Not compatible"],["csn","Reports CSN"],["verify","Verify"],["ok","Compatible"]].map(([s,l])=>n(s)?`<span class="pill p-${s}">${n(s)} ${l}</span>`:"").join(""):"";
+
+  let html=`<div class="verdict v-${v.cls}"><div class="dot" aria-hidden="true">${v.sym}</div><h2>${v.h}</h2><p>${v.p}</p>${counts?`<div class="counts">${counts}</div>`:""}</div>`;
+
+  if(pairs.length){
+    html+=`<div class="sec-head"><h3>Reader and card pairs</h3><span class="sub">${pairs.length} checked · problems first</span></div><div class="pairs">`;
+    html+=pairs.map(res=>{
+      const o=OUT_TXT[res.out]; const fixes=fixesFor(res,needFC);
+      const showOut=res.status!=="no";
+      return `<article class="pair s-${res.status}">
+        <div class="pair-title"><button data-open="${esc(res.r.id)}">${esc(res.r.id)}</button><span class="times">×</span><button data-open="${esc(res.c.id)}">${esc(res.c.id)}</button></div>
+        <div>${pillFor(res.status)}</div>
+        <div class="pair-body"><p>${esc(res.msg)}</p></div>
+        ${showOut?`<div class="readout"><span>Panel receives</span><span class="val ${res.out==="csn"&&needFC?"bad":""}">${o.t}</span><span>e.g. <span class="mono">${o.ex}</span></span></div>`:""}
+        ${fixes.length?`<div class="fix">${fixes.map(f=>`<div class="lbl">${esc(f.lbl)}</div><div class="row">${addBtns(f.ids)}</div>`).join("")}</div>`:""}
+      </article>`;}).join("");
+    html+=`</div>`;
+  }
+
+  // suggestions when one side is missing
+  if(readers.length && !creds.length){
+    html+=`<div class="sec-head"><h3>Credentials to quote</h3><span class="sub">${needFC?"Only parts that send FC + card #":"All listed parts"}</span></div><div class="pairs">`;
+    html+=readers.map(r=>{const cs=credsFor(r,needFC); const all=credsFor(r,false);
+      return `<article class="pair s-${cs.length?"ok":"csn"}"><div class="pair-title"><button data-open="${esc(r.id)}">${esc(r.id)}</button></div><div></div>
+      <div class="pair-body"><p>${cs.length?`The guide lists these for ${esc(r.id)}:`:needFC&&all.length?`${esc(r.id)} only reads cards by serial number (CSN). No part sends FC + card #. The listed cards are shown below; for FC + card #, change the reader.`:"No card credentials listed (PIN / mobile only)."}</p></div>
+      <div class="fix"><div class="row">${addBtns((cs.length?cs:all).map(c=>c.id))}</div></div></article>`;}).join("");
+    html+=`</div>`;
+  }
+  if(creds.length && !readers.length){
+    html+=`<div class="sec-head"><h3>Readers to quote</h3><span class="sub">Current products listed for each credential</span></div><div class="pairs">`;
+    html+=creds.map(c=>{const rs=readersFor(c); const csnWarn=needFC&&outputOf(c)==="csn";
+      return `<article class="pair s-${csnWarn?"csn":"ok"}"><div class="pair-title"><button data-open="${esc(c.id)}">${esc(c.id)}</button></div><div>${csnWarn?pillFor("csn"):""}</div>
+      <div class="pair-body"><p>${csnWarn?"Heads up: this is a CSN credential. Every reader will report its serial number, not FC + card #. ":""}${rs.length?"Readers the guide lists for this credential:":"No current door readers are listed for this credential."}</p></div>
+      ${rs.length?`<div class="fix"><div class="row">${addBtns(rs.map(r=>r.id).slice(0,12))}</div></div>`:""}</article>`;}).join("");
+    html+=`</div>`;
+  }
+
+  if(sys.length){
+    html+=`<div class="sec-head"><h3>System checks</h3><span class="sub">Panels, expansions, lifecycle</span></div><div class="pairs">`;
+    html+=sys.map(s=>`<article class="pair s-${s.status}"><div class="pair-title">${esc(s.title)}</div><div>${pillFor(s.status)}</div><div class="pair-body"><p>${esc(s.msg)}</p></div>${s.ids&&s.ids.length?`<div class="fix"><div class="row">${addBtns(s.ids)}</div></div>`:""}</article>`).join("");
+    html+=`</div>`;
+  }
+  if(items.length) html+=`<div class="toolbar"><button class="btn" id="copy">Copy summary for the quote</button></div>`;
+  $("#results").innerHTML=html;
+}
+function render(){ renderBasket(); renderResults(); }
+
+function summaryText(){
+  const lines=["Rosslare compatibility check","Parts: "+basket.join(", "),needFC?"Requirement: facility code + card number":"Requirement: CSN enrollment acceptable",""];
+  const lbl={ok:"OK",verify:"VERIFY",csn:"REPORTS CSN",no:"NOT COMPATIBLE",info:"NOTE"};
+  lastPairs.forEach(p=>lines.push(`[${lbl[p.status]}] ${p.r.id} + ${p.c.id}: ${p.msg}`));
+  lastSys.forEach(s=>lines.push(`[${lbl[s.status]}] ${s.title}: ${s.msg}`));
+  lines.push("","Source: Rosslare product guide (Larry's cross-reference)");
+  return lines.join("\n");
+}
+function toast(t){const el=$("#toast"); el.textContent=t; el.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>el.hidden=true,2200);}
+
+/* ---------- type-ahead ---------- */
+let sugIdx=0,sugList=[];
+function search(q){
+  const k=norm(q); if(!k) return [];
+  const words=q.toLowerCase().split(/\s+/).filter(Boolean);
+  const scored=[];
+  ALL.forEach(p=>{
+    let s=0;
+    const al=[p.id,...(p.aliases||[]),p.fam||""].map(norm);
+    if(al.some(a=>a===k)) s=100;
+    else if(al.some(a=>a.startsWith(k))) s=80;
+    else if(al.some(a=>a.includes(k))) s=60;
+    else { for(const [a,ids] of INDEX){ if(ids.includes(p.id) && a.startsWith(k)){s=55;break;} } }
+    if(!s){ const hay=(shortDesc(p)+" "+(p.name||"")+" "+(p.tech?techName(p.tech):"")).toLowerCase(); if(words.every(w=>hay.includes(w))) s=30; }
+    if(s){ if(p.status!=="current") s-=5; scored.push([s,p]); }
+  });
+  return scored.sort((a,b)=>b[0]-a[0]).slice(0,9).map(x=>x[1]);
+}
+function drawSuggest(){
+  const box=$("#suggest");
+  if(!sugList.length){ box.hidden=true; box.innerHTML=""; return; }
+  box.innerHTML=sugList.map((p,i)=>`<button type="button" class="${i===sugIdx?"active":""}" data-pick="${esc(p.id)}"><span class="kind">${KIND_LABEL[p.kind]}</span><span class="pn">${esc(p.id)}${p.status!=="current"?` <span class="tag t-${p.status==="disc"?"disc":"legacy"}">${p.status==="disc"?"Disc.":"Legacy"}</span>`:""}</span><span class="desc">${esc(shortDesc(p))}</span></button>`).join("");
+  box.hidden=false;
+}
+$("#q").addEventListener("input",e=>{sugList=search(e.target.value);sugIdx=0;drawSuggest();});
+$("#q").addEventListener("keydown",e=>{
+  if(e.key==="ArrowDown"){sugIdx=Math.min(sugIdx+1,sugList.length-1);drawSuggest();e.preventDefault();}
+  else if(e.key==="ArrowUp"){sugIdx=Math.max(sugIdx-1,0);drawSuggest();e.preventDefault();}
+  else if(e.key==="Enter"){ if(sugList[sugIdx]){add(sugList[sugIdx].id); e.target.value=""; sugList=[]; drawSuggest();} e.preventDefault(); }
+  else if(e.key==="Escape"){sugList=[];drawSuggest();}
+});
+$("#suggest").addEventListener("mousedown",e=>{const b=e.target.closest("[data-pick]"); if(b){e.preventDefault(); add(b.dataset.pick); $("#q").value=""; sugList=[]; drawSuggest(); $("#q").focus();}});
+$("#q").addEventListener("blur",()=>setTimeout(()=>{sugList=[];drawSuggest();},120));
+
+/* ---------- pick lists ---------- */
+function fillSelect(sel,placeholder,groups){
+  sel.innerHTML=`<option value="">${placeholder}</option>`+groups.map(([g,ps])=>ps.length?`<optgroup label="${esc(g)}">${ps.map(p=>`<option value="${esc(p.id)}">${esc(p.id)} · ${esc(p.kind==="cred"?p.name:p.style||p.desc||"")}${p.status==="disc"?" (disc.)":p.status==="legacy"?" (legacy)":""}</option>`).join("")}</optgroup>`:"").join("");
+  sel.addEventListener("change",()=>{ if(sel.value){add(sel.value); sel.value="";} });
+}
+const cur=r=>r.status!=="disc"&&!r.desktop;
+fillSelect($("#pick-reader"),"Add a reader…",[
+  ["125 kHz EM",READERS.filter(r=>cur(r)&&r.techs.join()==="EM")],
+  ["Keypad readers (AYC convertible)",READERS.filter(r=>cur(r)&&r.id.startsWith("AYC"))],
+  ["Mifare CSN 13.56 MHz",READERS.filter(r=>cur(r)&&/6255|6355/.test(r.id))],
+  ["O2S secure Mifare",READERS.filter(r=>cur(r)&&r.techs.some(t=>t.startsWith("O2S")))],
+  ["Multi-tech",READERS.filter(r=>r.id==="AY-K35")],
+  ["UHF long range",READERS.filter(r=>cur(r)&&r.techs.includes("UHF"))],
+  ["Remote receiver",READERS.filter(r=>r.id==="AY-L23")],
+  ["Biometric",READERS.filter(r=>r.techs.includes("BIO")&&r.status!=="disc")],
+  ["Standalone units",STANDALONE],
+  ["Desktop enrollment",READERS.filter(r=>r.desktop)],
+  ["Discontinued",READERS.filter(r=>r.status==="disc")]
+]);
+fillSelect($("#pick-cred"),"Add a credential…",Object.keys(TECH).filter(t=>t!=="BIO").map(t=>[techName(t),CREDS.filter(c=>c.tech===t)]));
+fillSelect($("#pick-ctrl"),"Add a panel or expansion…",[
+  ["AC-825IP",CTRLS.filter(c=>c.line==="825")],
+  ["B-series panels",CTRLS.filter(c=>c.line==="B")],
+  ["Expansion & accessories",EXPS],
+  ["Legacy boards (repair)",CTRLS.filter(c=>c.status==="legacy")],
+  ["Legacy (not available)",CTRLS.filter(c=>c.status==="disc")],
+  ["Request-to-exit",REXS]
+]);
+
+/* ---------- paste ---------- */
+$("#paste-go").addEventListener("click",()=>{
+  const txt=$("#paste").value;
+  const tokens=txt.split(/[\s,;|()\[\]\t]+/).map(t=>t.trim()).filter(Boolean);
+  const found=[],miss=[];
+  tokens.forEach(t=>{
+    if(!/[A-Za-z]/.test(t)||!/\d/.test(t)) { if(/^(prox|hid|ble|nfc|pin)$/i.test(t)){} else return; }
+    if(/^\d+x?$/i.test(t)) return;
+    const id=resolve(t);
+    if(id){ if(!found.includes(id)) found.push(id); }
+    else if(/^[A-Z]{1,4}-?[A-Z0-9]/i.test(t) && t.length>=4 && /-/.test(t)) miss.push(t);
+  });
+  found.forEach(id=>{ if(!basket.includes(id)) basket.push(id); });
+  render();
+  $("#paste-result").innerHTML=(found.length?`Added <span class="mono">${found.map(esc).join(", ")}</span>.`:"No known part numbers found.")+(miss.length?`<br>Not in the guide: <span class="mono">${[...new Set(miss)].map(esc).join(", ")}</span>`:"");
+});
+$("#paste-clear").addEventListener("click",()=>{$("#paste").value="";$("#paste-result").innerHTML="";});
+
+/* ---------- misc controls ---------- */
+$("#needfc").addEventListener("change",e=>{needFC=e.target.checked; renderResults();});
+$("#clear").addEventListener("click",()=>{basket=[];render();});
+$("#example").addEventListener("click",()=>{basket=["AY-H6255","RT-C1S-26A-3000","AT-C1S-000-E000","AC-825IP-U","MD-D02B"];render();});
+document.addEventListener("click",e=>{
+  const a=e.target.closest("[data-add]"); if(a){add(a.dataset.add); toast(`Added ${a.dataset.add}`); return;}
+  const r=e.target.closest("[data-remove]"); if(r){remove(r.dataset.remove); return;}
+  const o=e.target.closest("[data-open]"); if(o){openDrawer(o.dataset.open); return;}
+  if(e.target.id==="copy"){
+    const t=summaryText();
+    const done=()=>toast("Summary copied");
+    const fallback=()=>{const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");done();}catch(_){toast("Select and copy the text manually");}ta.remove();};
+    try{navigator.clipboard.writeText(t).then(done,fallback);}catch(_){fallback();}
+  }
+});
+
+/* ---------- drawer ---------- */
+function openDrawer(id){
+  const p=BY[id]; if(!p) return;
+  const st=p.status==="disc"?'<span class="tag t-disc">Discontinued / not available</span>':p.status==="legacy"?'<span class="tag t-legacy">Legacy</span>':'<span class="tag t-cur">Available</span>';
+  let specs=[],body="";
+  if(isReaderish(p)){
+    specs=[["Type",p.kind==="standalone"?"Standalone controller":p.desktop?"Desktop enrollment reader":p.convertible?"Convertible reader":"Reader"],["Style",p.style],["Reads",p.techs.map(techName).join(", ")],["Keypad",p.keypad?"Yes":"No"],["Output",p.out?p.out.replace("W","Wiegand").replace("O","OSDP").replace(/\bS\b/,"RS-232").replace(/\bC\b/,"Clock & Data"):p.kind==="standalone"?"Internal relay":""],["Read range",p.range],["Supply",p.volt],["Temp",p.temp],["IP",p.ip],["UL",p.ul],["Heater",p.heater]];
+    const cs=p.creds.map(i=>BY[i]).filter(Boolean);
+    body+=`<h4>Credentials listed in the guide</h4><div class="chips">${cs.map(c=>`<span class="chip"><button class="open" data-open="${esc(c.id)}">${esc(c.id)}</button></span>`).join("")}</div>`;
+    const csnOnly=cs.filter(c=>!c.pseudo).every(c=>outputOf(c)==="csn") && cs.some(c=>!c.pseudo);
+    if(csnOnly) body+=`<p class="warnbox">Every card listed for this reader is a CSN credential, so the panel gets card serial numbers, not facility code + card number.</p>`;
+  } else if(p.kind==="cred"){
+    specs=[["Technology",techName(p.tech)],["Form",p.form],["Panel receives",OUT_TXT[outputOf(p)].t],["Sold by Rosslare",p.sold===false?"No":"Yes"]];
+    const rs=[...READERS,...STANDALONE].filter(r=>r.creds.includes(p.id));
+    body+=`<h4>Readers listed for this credential</h4><div class="chips">${rs.map(r=>`<span class="chip"><button class="open" data-open="${esc(r.id)}">${esc(r.id)}${r.status!=="current"?" *":""}</button></span>`).join("")||'<span class="empty">None</span>'}</div>`;
+    if(outputOf(p)==="csn") body+=`<p class="warnbox">CSN credential. Readers report the card's serial number, not a facility code + card number.</p>`;
+  } else if(p.kind==="controller"){
+    specs=[["Description",p.desc],["Doors",p.doors],["Readers",p.readers],["Connection",p.conn],["Input power",p.pwr],["Lock power",p.lock],["Expansion",p.exp],["Aux relays",p.auxR],["Aux inputs",p.auxI],["Relays",p.relays],["Temp",p.temp],["UL",p.ul],["Backup battery",p.batt],["Reader protocols",p.osdp?"Wiegand, OSDP":"Wiegand"]];
+    const ex=EXPS.filter(e=>e.fits&&e.fits.includes(p.id));
+    if(ex.length) body+=`<h4>Compatible expansion</h4><div class="chips">${ex.map(e=>`<span class="chip"><button class="open" data-open="${esc(e.id)}">${esc(e.id)}</button></span>`).join("")}</div>`;
+    body+=`<p class="note">Doors and readers are shown without / with expansion. Reader ports are the limit: in/out doors use 2 ports each. The battery isn't included; the charger supports a 12 V 7 Ah SLA only.</p>`;
+  } else if(p.kind==="expansion"){
+    specs=[["Description",p.desc]];
+    if(p.fits) body+=`<h4>Fits</h4><div class="chips">${p.fits.map(i=>`<span class="chip"><button class="open" data-open="${esc(i)}">${esc(i)}</button></span>`).join("")}</div>`;
+  } else if(p.kind==="rex"){
+    specs=[["Type",p.type],["Description",p.desc],["Style",p.style],["Supply",p.volt],["Output",p.output],["Termination",p.term],["IP",p.ip],["UL",p.ul]];
+  }
+  const d=$("#drawer");
+  d.innerHTML=`<button class="btn small close" id="dr-close">Close</button>
+    <div class="eyebrow">${KIND_LABEL[p.kind]}</div><h2 id="dr-title">${esc(p.id)}</h2>
+    <p class="lead">${esc(p.kind==="cred"?p.name:shortDesc(p))}</p><p>${st}</p>
+    <dl class="specs">${specs.filter(s=>s[1]).map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+    ${p.web?'<p><span class="tag t-legacy">From rosslaresecurity.com</span></p>':''}${p.note?`<p class="warnbox">${esc(p.note)}</p>`:""}
+    ${p.repl?`<p class="note">Replacement: <button class="add" data-open="${esc(p.repl)}">${esc(p.repl)}</button></p>`:""}
+    ${body}
+    <div class="actions row">${basket.includes(p.id)?'<span class="note" style="margin:0">On this quote</span>':`<button class="btn primary" data-add="${esc(p.id)}" id="dr-add">Add to check</button>`}</div>`;
+  $("#scrim").hidden=false; $("#dr-close").focus();
+}
+function closeDrawer(){$("#scrim").hidden=true;}
+$("#scrim").addEventListener("click",e=>{ if(e.target.id==="scrim"||e.target.id==="dr-close") closeDrawer(); if(e.target.id==="dr-add") closeDrawer(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!$("#scrim").hidden) closeDrawer(); });
+
+/* ---------- catalog ---------- */
+const CAT_KINDS=[["all","All"],["reader","Readers"],["cred","Credentials"],["controller","Panels"],["standalone","Standalone"],["expansion","Expansion"],["rex","REX"]];
+let catKind="reader";
+$("#cat-kind").innerHTML=CAT_KINDS.map(([k,l])=>`<button data-k="${k}" aria-pressed="${k===catKind}">${l}</button>`).join("");
+$("#cat-tech").innerHTML=`<option value="">Any technology</option>`+Object.keys(TECH).map(t=>`<option value="${t}">${techName(t)}</option>`).join("");
+$("#cat-kind").addEventListener("click",e=>{const b=e.target.closest("button"); if(!b) return; catKind=b.dataset.k; [...$("#cat-kind").children].forEach(x=>x.setAttribute("aria-pressed",x===b)); drawCatalog();});
+$("#cat-tech").addEventListener("change",drawCatalog); $("#cat-q").addEventListener("input",drawCatalog);
+function statusTag(p){return p.status==="disc"?'<span class="tag t-disc">Disc.</span>':p.status==="legacy"?'<span class="tag t-legacy">Legacy</span>':'<span class="tag t-cur">Available</span>';}
+function drawCatalog(){
+  const tech=$("#cat-tech").value, q=$("#cat-q").value.toLowerCase(), nq=norm(q);
+  let list=ALL.filter(p=>catKind==="all"||p.kind===catKind);
+  if(tech) list=list.filter(p=>(p.techs&&p.techs.includes(tech))||p.tech===tech);
+  if(q) list=list.filter(p=>norm(p.id).includes(nq)||(p.aliases||[]).some(a=>norm(a).includes(nq))||shortDesc(p).toLowerCase().includes(q)||(p.name||"").toLowerCase().includes(q));
+  $("#cat-head").innerHTML=`<tr><th>Part #</th><th>Type</th><th>Technology</th><th>Details</th><th>Status</th></tr>`;
+  $("#cat-body").innerHTML=list.map(p=>{
+    const techs=p.techs?p.techs.map(t=>`<span class="tag">${esc(techName(t))}</span>`).join(""):p.tech?`<span class="tag">${esc(techName(p.tech))}</span>`:"—";
+    const det=p.kind==="cred"?`${esc(p.name)} · panel gets ${OUT_TXT[outputOf(p)].t.toLowerCase()}`:p.kind==="reader"?`${esc(p.style)}${p.keypad?" · keypad":""}${p.out?` · ${esc(p.out)}`:""}`:esc(p.desc||p.style||"");
+    return `<tr data-open="${esc(p.id)}" tabindex="0"><td class="pn">${esc(p.id)}</td><td>${KIND_LABEL[p.kind]}</td><td>${techs}</td><td>${det}</td><td>${statusTag(p)}</td></tr>`;
+  }).join("")||`<tr><td colspan="5" class="empty">No products match.</td></tr>`;
+}
+$("#cat-body").addEventListener("keydown",e=>{ if(e.key==="Enter"){const tr=e.target.closest("[data-open]"); if(tr) openDrawer(tr.dataset.open);} });
+
+/* ---------- sizing ---------- */
+const SZ_SINGLE=[[4,1,0,0],[8,1,1,0],[12,1,2,1],[16,1,3,1],[20,1,4,2],[24,1,5,2],[28,1,6,3],[32,1,7,3],[36,1,8,4],[40,1,9,4],[44,1,10,5],[48,1,11,5]];
+const SZ_SPLIT=[[4,1,0,0],[8,1,1,0],[12,1,2,1],[16,1,3,1],[20,1,4,2],[24,1,5,2],[28,2,5,2],[32,2,6,2],[36,2,7,3],[40,2,8,3],[44,2,9,4],[48,2,10,4],[52,3,10,4],[56,3,11,4],[60,3,12,5],[64,3,13,5],[68,3,14,6],[72,3,15,6],[76,4,15,6],[80,4,16,6],[84,4,17,7],[88,4,18,7],[92,4,19,8],[96,4,20,8]];
+const EL=[[6,1,0,0],[20,1,1,0],[36,1,2,1],[52,1,3,1],[68,1,4,2],[84,1,5,2]];
+function bom(cells){return `<div class="bom">${cells.map(([n,l])=>`<div><b>${n}</b><span>${l}</span></div>`).join("")}</div>`;}
+function drawSizing(){
+  const doors=Math.max(1,+$("#sz-doors").value||1), io=$("#sz-inout").checked, split=$("#sz-split").checked;
+  const rdr=doors*(io?2:1); const tbl=split?SZ_SPLIT:SZ_SINGLE; const row=tbl.find(r=>rdr<=r[0]);
+  let h=`<p class="note" style="margin:0 0 6px">${rdr} Wiegand reader port${rdr>1?"s":""} needed (${doors} door${doors>1?"s":""}${io?" × 2 readers":""}).</p>`;
+  if(row) h+=bom([[row[1],"AC-825IP"],[row[2]||"–","D-805"],[row[3]||"–","ME-1515"]]);
+  else h+=`<p class="warnbox">${rdr} readers is over the ${split?96:48}-reader maximum in the guide's table.${split?"":" Turn on the split option to go past 48."} Contact tech support for larger systems.</p>`;
+  if(!split && rdr>24) h+=`<p class="warnbox">A single AC-825 controls every door. If it fails, all doors go offline. The guide recommends splitting systems over 24 readers evenly across 2 AC-825s.</p>`;
+  h+=`<p class="note">These tables assume Wiegand readers. With OSDP readers, each configuration gets 2 more readers.</p>`;
+  $("#sz-out").innerHTML=h;
+  const fl=Math.max(1,+$("#el-floors").value||1); const er=EL.find(r=>fl<=r[0]);
+  $("#el-out").innerHTML=er?bom([[er[1],"AC-825IP"],[er[2]||"–","R-805"],[er[3]||"–","ME-1515"]])+`<p class="note">Per elevator. Multiply by the number of elevators.</p>`:`<p class="warnbox">The guide's elevator table goes up to 84 floors per elevator.</p>`;
+}
+["#sz-doors","#sz-inout","#sz-split","#el-floors"].forEach(s=>$(s).addEventListener("input",drawSizing));
+
+/* ---------- about ---------- */
+$("#about-body").innerHTML=`
+<div class="panel"><h3>Where this comes from</h3>
+<p>Every rule on this page comes from the Rosslare product guide spreadsheet (Product_Guide_FromLarry.xlsx) and its seven tabs: Controllers, AC-825 Config, Readers, Standalone, Credentials, REX and Legacy Panels.</p>
+<p><b>Compatible</b> means the guide lists that credential part for that reader. <b>Verify</b> means the reader supports the technology but the guide doesn't list the part. <b>Reports CSN</b> means the pair reads, but the panel gets the card's serial number instead of a facility code + card number. <b>Not compatible</b> means different technology or modulation, so the card won't read at all.</p>
+<p>In the guide, every card that sends a facility code + card number has <span class="mono">26A</span> in its part number. The Mifare cards (<span class="mono">AT-C1S/C1K/D1S/D1K -000-</span>) sit under the CSN column.</p></div>
+<div class="panel"><h3>Why cards report CSN</h3>
+<ul>
+<li>The AY-X6255, AY-X6355 and 6255BT/6355BT readers are Mifare <b>CSN</b> readers. Any 13.56 MHz card, including O2S RT- cards, reads as its chip serial number.</li>
+<li>For a facility code + card number on 13.56 MHz, quote an <b>O2S</b> reader (AY-X6270/X6370 for C1 cards, AY-X6280/X6380 for V2 cards) with the matching <span class="mono">RT-…-26A-…</span> cards.</li>
+<li>On 125 kHz, EM cards (<span class="mono">AT-ER…-26A-…</span>) send FC + card #. HID Prox needs a reader that lists Prox (AYC-X60, AY-K35, DR-12C).</li>
+</ul></div>
+<div class="panel"><h3>Notes carried over from the guide</h3>
+<ol>
+<li>Reader ports set the limit, not doors. In/out doors use 2 ports, so a 4-door panel handles 2 in/out doors.</li>
+<li>B-series expansions (MD-D02B/D04B) and legacy expansions (MD-D02/D04) aren't interchangeable.</li>
+<li>Backup battery isn't included. The charger supports a 12 V 7 Ah SLA only.</li>
+<li>Legacy panels are no longer sold as complete assemblies. Boards are available for repair while parts last.</li>
+<li>AC-825IP specs cover the main board's Wiegand ports. 2 more readers can be added over OSDP.</li>
+<li>Prefer the AC-825IP over the AC-425B (2 inputs per door vs 1). The AC-425B is OK for remote sites using port forwarding without a VPN.</li>
+<li>AC-825 systems over 24 doors should be split across 2 AC-825s. Each elevator needs its own AC-825.</li>
+<li>AYC convertible readers need a PS-C25TBU or MD-25T for standalone use.</li>
+<li>HID Prox credentials aren't sold by Rosslare. EM is Rosslare's 125 kHz credential.</li>
+<li>REX devices need a suffix: EO (EXIT printed) or OO (no printing).</li>
+</ol></div>
+<div class="panel"><h3>Inconsistencies found in the sheet</h3>
+<ul>
+<li>UHF desktop reader: DR-U922BT (Readers tab) vs DR-U955BT (Credentials tab). <b>Resolved:</b> DR-U955BT, per the 2025 catalog.</li>
+<li>Remote part numbers: SA-23-B2G / SA-23G-B2 in the guide. <b>Resolved:</b> SA-23-B2 / SA-23-B4, per the 2025 catalog. All spellings are accepted here.</li>
+<li>UHF ISO card: LT-UVS-3000 in the guide. <b>Resolved:</b> LT-UVS-26A-3000, per the 2025 catalog.</li>
+<li>DR-6280 O2S generation. <b>Resolved:</b> the 2025 catalog lists MIFARE Classic EV1 and DESFire EV1, so both.</li>
+<li>AY-B9250BT: Readers tab says EM + Mifare, Credentials tab says Mifare only. <b>Resolved:</b> Mifare + BLE only, per the Aug 2025 datasheet.</li>
+<li>AT-D1S-000-0000 in the guide is AT-D1S-000-0001 in the 2025 catalog and on the website. Both are accepted.</li>
+<li>AY-X14 isn't on the Credentials tab (EM per the Readers tab). <i>Still open.</i></li>
+<li>AC-825 sizing table row "47–48" should read 45–48.</li>
+<li>AC-215IP-PCBA shows 2 aux relays/inputs on Controllers and 2/4 on Legacy Panels. This tool uses the Controllers tab.</li>
+</ul></div>
+<div class="panel"><h3>Sources other than the spreadsheet</h3>
+<p>Everything else on this page comes from Larry's spreadsheet. Only the items below come from other documents in the Rosslare Documentation folder, which may be older or newer than the sheet:</p>
+<ul>
+<li><b>AY-x6255 datasheet (V2024_07_28):</b> confirms the X6255 series reads and outputs the card CSN over Wiegand/OSDP. It also mentions a MIFARE Classic EV1 sector-read option (configured with the CS-CCT tool) that isn't in the guide. Ask tech support before relying on it.</li>
+<li><b>AY-x6x70 and AY-x6x80 O2S datasheets (V2022_07_31):</b> O2S readers "read O2S ID data from O2S credentials" and "read CSN of non-O2S credentials." This is why a plain Mifare card on an O2S reader shows <i>Reports CSN</i> instead of <i>Not compatible</i>.</li>
+<li><b>AY-B9250BT datasheet (V02, Aug 2025):</b> confirms Mifare + BLE only, with no EM.</li>
+<li><b>rosslaresecurity.com, MIFARE Classic EV1 Credentials datasheet (V2022_03_06):</b> confirms that AT- Mifare parts ship <i>not programmed, no ID printed</i>, and that RT-…-26A parts carry <i>O2S Rosslare keys, Rosslare Wiegand 26-bit</i> with FC and card ID printed. That backs up this tool's "26A = facility code + card number" rule. It also added 22 part variants the guide doesn't list: 4K memory, 38-bit and ring/twist fobs. They're marked "From rosslaresecurity.com" and check as <i>Verify</i> until tech support confirms which readers take them.</li>
+<li><b>Rosslare product catalog 2025 (V002):</b> DR-U955BT, SA-23-B2/B4 and LT-UVS-26A-3000 part numbers, and DR-6280 credential support.</li>
+</ul></div>`;
+
+/* ---------- tabs ---------- */
+function showTab(t){
+  if(!["check","catalog","sizing","about"].includes(t)) t="check";
+  document.querySelectorAll("section.tab").forEach(s=>s.hidden=s.id!==t);
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));
+  try{ if(location.hash!=="#"+t) history.replaceState(null,"","#"+t);}catch(_){}
+}
+document.querySelector("nav.tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]"); if(b) showTab(b.dataset.tab);});
+
+/* ---------- boot: start empty (use "Load example" to see a demo) ---------- */
+basket=[];
+render(); drawCatalog(); drawSizing();
+showTab((location.hash||"").slice(1));
+</script>
+
+</body>
+</html>
