@@ -138,6 +138,8 @@ textarea{width:100%;min-height:110px;margin-top:10px;padding:10px;border:1px sol
 .pair.s-info{box-shadow:inset 4px 0 0 var(--info)}
 .pair-title{font-family:var(--mono);font-weight:600;font-size:14px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .pair-title .times{color:var(--muted);font-weight:400}
+.pair-title button.rm{text-decoration:none;width:20px;height:20px;border-radius:5px;display:inline-grid;place-items:center;color:var(--muted);font:600 15px/1 var(--body);margin-left:-2px}
+.pair-title button.rm:hover{background:var(--no-soft);color:var(--no)}
 .pair-title button{background:none;border:0;padding:0;font:inherit;cursor:pointer;color:inherit;text-decoration:underline dotted var(--muted);text-underline-offset:3px}
 .pair-body{grid-column:1/-1;color:var(--ink);font-size:14px}
 .pair-body p{margin:0}
@@ -714,6 +716,8 @@ function renderBasket(){
 }
 
 function pillFor(s){return {ok:'<span class="pill p-ok">Compatible</span>',verify:'<span class="pill p-verify">Verify</span>',csn:'<span class="pill p-csn">Reports CSN</span>',no:'<span class="pill p-no">Not compatible</span>',info:'<span class="pill p-info">Note</span>'}[s];}
+function rmBtn(id){return `<button class="rm" type="button" data-remove="${esc(id)}" title="Remove ${esc(id)} from the quote" aria-label="Remove ${esc(id)} from the quote">×</button>`;}
+function titleWithRemove(t){let h=esc(t); basket.slice().sort((a,b)=>b.length-a.length).forEach(id=>{const e=esc(id); if(h.includes(e)) h=h.split(e).join("\u0000"+id+"\u0000");}); return h.split("\u0000").map((part,i)=>i%2?esc(part)+rmBtn(part):part).join("");}
 function addBtns(ids){return ids.map(id=>basket.includes(id)?`<span class="mono" style="font-size:12px;color:var(--muted)">${esc(id)} ✓</span>`:`<button class="add" data-add="${esc(id)}">+ ${esc(id)}</button>`).join("");}
 
 let lastPairs=[],lastSys=[];
@@ -744,7 +748,7 @@ function renderResults(){
       const o=OUT_TXT[res.out]; const fixes=fixesFor(res,needFC);
       const showOut=res.status!=="no";
       return `<article class="pair s-${res.status}">
-        <div class="pair-title"><button data-open="${esc(res.r.id)}">${esc(res.r.id)}</button><span class="times">×</span><button data-open="${esc(res.c.id)}">${esc(res.c.id)}</button></div>
+        <div class="pair-title"><button data-open="${esc(res.r.id)}">${esc(res.r.id)}</button>${rmBtn(res.r.id)}<span class="times">+</span><button data-open="${esc(res.c.id)}">${esc(res.c.id)}</button>${rmBtn(res.c.id)}</div>
         <div>${pillFor(res.status)}</div>
         <div class="pair-body"><p>${esc(res.msg)}</p></div>
         ${showOut?`<div class="readout"><span>Panel receives</span><span class="val ${res.out==="csn"&&needFC?"bad":""}">${o.t}</span><span>e.g. <span class="mono">${o.ex}</span></span></div>`:""}
@@ -757,7 +761,7 @@ function renderResults(){
   if(readers.length && !creds.length){
     html+=`<div class="sec-head"><h3>Credentials to quote</h3><span class="sub">${needFC?"Only parts that send FC + card #":"All listed parts"}</span></div><div class="pairs">`;
     html+=readers.map(r=>{const cs=credsFor(r,needFC); const all=credsFor(r,false);
-      return `<article class="pair s-${cs.length?"ok":"csn"}"><div class="pair-title"><button data-open="${esc(r.id)}">${esc(r.id)}</button></div><div></div>
+      return `<article class="pair s-${cs.length?"ok":"csn"}"><div class="pair-title"><button data-open="${esc(r.id)}">${esc(r.id)}</button>${rmBtn(r.id)}</div><div></div>
       <div class="pair-body"><p>${cs.length?`The guide lists these for ${esc(r.id)}:`:needFC&&all.length?`${esc(r.id)} only reads cards by serial number (CSN). No part sends FC + card #. The listed cards are shown below; for FC + card #, change the reader.`:"No card credentials listed (PIN / mobile only)."}</p></div>
       <div class="fix"><div class="row">${addBtns((cs.length?cs:all).map(c=>c.id))}</div></div></article>`;}).join("");
     html+=`</div>`;
@@ -765,7 +769,7 @@ function renderResults(){
   if(creds.length && !readers.length){
     html+=`<div class="sec-head"><h3>Readers to quote</h3><span class="sub">Current products listed for each credential</span></div><div class="pairs">`;
     html+=creds.map(c=>{const rs=readersFor(c); const csnWarn=needFC&&outputOf(c)==="csn";
-      return `<article class="pair s-${csnWarn?"csn":"ok"}"><div class="pair-title"><button data-open="${esc(c.id)}">${esc(c.id)}</button></div><div>${csnWarn?pillFor("csn"):""}</div>
+      return `<article class="pair s-${csnWarn?"csn":"ok"}"><div class="pair-title"><button data-open="${esc(c.id)}">${esc(c.id)}</button>${rmBtn(c.id)}</div><div>${csnWarn?pillFor("csn"):""}</div>
       <div class="pair-body"><p>${csnWarn?"Heads up: this is a CSN credential. Every reader will report its serial number, not FC + card #. ":""}${rs.length?"Readers the guide lists for this credential:":"No current door readers are listed for this credential."}</p></div>
       ${rs.length?`<div class="fix"><div class="row">${addBtns(rs.map(r=>r.id).slice(0,12))}</div></div>`:""}</article>`;}).join("");
     html+=`</div>`;
@@ -773,7 +777,7 @@ function renderResults(){
 
   if(sys.length){
     html+=`<div class="sec-head"><h3>System checks</h3><span class="sub">Panels, expansions, lifecycle</span></div><div class="pairs">`;
-    html+=sys.map(s=>`<article class="pair s-${s.status}"><div class="pair-title">${esc(s.title)}</div><div>${pillFor(s.status)}</div><div class="pair-body"><p>${esc(s.msg)}</p></div>${s.ids&&s.ids.length?`<div class="fix"><div class="row">${addBtns(s.ids)}</div></div>`:""}</article>`).join("");
+    html+=sys.map(s=>`<article class="pair s-${s.status}"><div class="pair-title">${titleWithRemove(s.title)}</div><div>${pillFor(s.status)}</div><div class="pair-body"><p>${esc(s.msg)}</p></div>${s.ids&&s.ids.length?`<div class="fix"><div class="row">${addBtns(s.ids)}</div></div>`:""}</article>`).join("");
     html+=`</div>`;
   }
   if(items.length) html+=`<div class="toolbar"><button class="btn" id="copy">Copy summary for the quote</button></div>`;
@@ -878,7 +882,7 @@ $("#clear").addEventListener("click",()=>{basket=[];render();});
 $("#example").addEventListener("click",()=>{basket=["AY-H6255","RT-C1S-26A-3000","AT-C1S-000-E000","AC-825IP-U","MD-D02B"];render();});
 document.addEventListener("click",e=>{
   const a=e.target.closest("[data-add]"); if(a){add(a.dataset.add); toast(`Added ${a.dataset.add}`); return;}
-  const r=e.target.closest("[data-remove]"); if(r){remove(r.dataset.remove); return;}
+  const r=e.target.closest("[data-remove]"); if(r){remove(r.dataset.remove); toast(`Removed ${r.dataset.remove}`); return;}
   const o=e.target.closest("[data-open]"); if(o){openDrawer(o.dataset.open); return;}
   if(e.target.id==="copy"){
     const t=summaryText();
@@ -923,11 +927,11 @@ function openDrawer(id){
     ${p.web?'<p><span class="tag t-legacy">From rosslaresecurity.com</span></p>':''}${p.note?`<p class="warnbox">${esc(p.note)}</p>`:""}
     ${p.repl?`<p class="note">Replacement: <button class="add" data-open="${esc(p.repl)}">${esc(p.repl)}</button></p>`:""}
     ${body}
-    <div class="actions row">${basket.includes(p.id)?'<span class="note" style="margin:0">On this quote</span>':`<button class="btn primary" data-add="${esc(p.id)}" id="dr-add">Add to check</button>`}</div>`;
+    <div class="actions row">${basket.includes(p.id)?`<button class="btn" data-remove="${esc(p.id)}" id="dr-remove">Remove from check</button>`:`<button class="btn primary" data-add="${esc(p.id)}" id="dr-add">Add to check</button>`}</div>`;
   $("#scrim").hidden=false; $("#dr-close").focus();
 }
 function closeDrawer(){$("#scrim").hidden=true;}
-$("#scrim").addEventListener("click",e=>{ if(e.target.id==="scrim"||e.target.id==="dr-close") closeDrawer(); if(e.target.id==="dr-add") closeDrawer(); });
+$("#scrim").addEventListener("click",e=>{ if(e.target.id==="scrim"||e.target.id==="dr-close") closeDrawer(); if(e.target.id==="dr-add"||e.target.id==="dr-remove") closeDrawer(); });
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!$("#scrim").hidden) closeDrawer(); });
 
 /* ---------- catalog ---------- */
